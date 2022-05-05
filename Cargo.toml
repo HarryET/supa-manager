@@ -1,0 +1,24 @@
+[package]
+name = "supa-manager"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rocket = { version = "0.5.0-rc.1", features = ["serde_json", "json"] }
+rocket_sync_db_pools = { version = "0.1.0-rc.1", default-features = false, features = ["diesel_postgres_pool"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0.81"
+
+bollard = "0.12" # Docker Client API
+
+diesel = { version = "1.4.4", features = ["postgres", "chrono", "r2d2", "uuidv07"] }
+diesel_migrations = "1.4.0"
+
+cuid = "1.2.0"
+uuid = { version = "0.8.0", features = ["serde", "v4"] }
+
+dotenv = "0.15.0"
+
+passwords = "3.1.9"

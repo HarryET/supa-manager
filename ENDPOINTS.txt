@@ -1,0 +1,22 @@
+/api
+    /instances
+        GET
+        POST
+        /{id}
+            GET
+            DELETE
+            /start
+                POST
+            /stop
+                POST
+            /restart
+                POST
+            /services
+                /{service}
+                    GET
+                    /start
+                        POST
+                    /stop
+                        POST
+                    /restart
+                        POST
