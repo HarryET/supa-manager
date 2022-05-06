@@ -108,7 +108,7 @@ async fn new_instance(body: Json<NewInstance>, docker: &State<Docker>) -> Result
         image: Some(format!("{}:{}", DB_IMAGE, DB_TAG)),
         env: Some(pg_instance_data.to_env()),
         labels: Some(instance.to_docker_labels("postgres".to_string(), None, Some("pg".to_string()), Some("5432".to_string()))),
-        networking_config: Some(new_net_config(network_name.clone(), vec!["postgres".to_string()])),
+        networking_config: Some(new_net_config(network_name.clone(), vec!["postgres".to_string()], false)),
         ..Default::default()
     }).await?;
     instance.database_container_id = db_container.id;
@@ -119,7 +119,7 @@ async fn new_instance(body: Json<NewInstance>, docker: &State<Docker>) -> Result
     let db_meta_container = create_container(&docker, format!("{}_postgres_meta", instance.hostname), container::Config {
         image: Some(format!("{}:{}", META_IMAGE, META_TAG)),
         env: Some(db_meta_container_env),
-        networking_config: Some(new_net_config(network_name.clone(), vec!["postgres_meta".to_string()])),
+        networking_config: Some(new_net_config(network_name.clone(), vec!["postgres_meta".to_string()], false)),
         ..Default::default()
     }).await?;
     instance.postgres_meta_container_id = db_meta_container.id;
@@ -130,7 +130,7 @@ async fn new_instance(body: Json<NewInstance>, docker: &State<Docker>) -> Result
             image: Some(format!("{}:{}", STUDIO_IMAGE, STUDIO_TAG)),
             env: Some(vec![format!("POSTGRES_PASSWORD={}", pg_instance_data.password), "STUDIO_PG_META_URL=http://postgres_meta:8080".to_string(), format!("SUPABASE_URL=http://{}.{}", instance.hostname, DOMAIN), format!("SUPABASE_REST_URL={}", "")]),
             labels: Some(instance.to_docker_labels("studio".to_string(), None, None, Some("3000".to_string()))),
-            networking_config: Some(new_net_config(network_name.clone(), vec!["studio".to_string()])),
+            networking_config: Some(new_net_config(network_name.clone(), vec!["studio".to_string()], true)),
             ..Default::default()
         }).await?;
         instance.studio_container_id = Some(studio_container.id);
