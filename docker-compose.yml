@@ -18,32 +18,22 @@ services:
       - "--providers.docker.network=traefik"
 
       - "--entrypoints.web.address=:80"
-      #^ - "--entrypoints.websecure.address=:443"
-      #^ - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
-      #^ - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
-
-      #^ - "--certificatesresolvers.letsencryptresolver.acme.httpchallenge=true"
-      #^ - "--certificatesresolvers.letsencryptresolver.acme.httpchallenge.entrypoint=web"
-      #^ - "--certificatesresolvers.letsencryptresolver.acme.email=${ACME_EMAIL}"
-      #^ - "--certificatesresolvers.letsencryptresolver.acme.storage=/letsencrypt/acme.json"
+      - "--entrypoints.pg.address=:5432"
     ports:
       # The HTTP port
       - "80:80"
-      # The HTTPS port
-      #^ - "443:443"
+      # The Postgres port
+      - "5432:5432"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./access.log:/access.log
-      #^ - letsencrypt-data:/letsencrypt
     environment:
       - TZ=Europe/London
     labels:
       - traefik.enable=true
       - traefik.http.routers.api.rule=Host(`traefik.${DOMAIN}`)
-      #^ - traefik.http.routers.api.entrypoints=websecure
-      - traefik.http.router.api.entrypoints=web
+      - traefik.http.routers.api.entrypoints=web
       - traefik.http.routers.api.service=api@internal
-      #^ - traefik.http.routers.api.tls.certresolver=letsencryptresolver
       - traefik.port=8080
 
 #  supa-manager:
@@ -65,3 +55,4 @@ services:
 networks:
   traefik:
     name: traefik
+    external: true

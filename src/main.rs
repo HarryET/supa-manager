@@ -4,6 +4,7 @@ mod schema;
 mod database;
 mod constants;
 mod utils;
+mod config;
 
 #[macro_use]
 extern crate rocket;
@@ -18,7 +19,6 @@ use diesel::pg::PgConnection;
 use dotenv::dotenv;
 use std::env;
 use bollard::Docker;
-use bollard::image::CreateImageOptions;
 use diesel_migrations::embed_migrations;
 use crate::constants::{DB_IMAGE, DB_TAG, GOTRUE_IMAGE, GOTRUE_TAG, META_IMAGE, META_TAG, POSTGREST_IMAGE, POSTGREST_TAG, REALTIME_IMAGE, REALTIME_TAG, STUDIO_IMAGE, STUDIO_TAG};
 use crate::database::PostgresDbConn;
@@ -34,7 +34,7 @@ fn index() -> &'static str {
 async fn main() {
     dotenv().ok();
 
-    migrate();
+    let _ = migrate();
 
     let docker = Docker::connect_with_local_defaults().expect("Failed to connect to docker.");
 
@@ -50,11 +50,11 @@ async fn main() {
         .await;
 }
 
-async fn migrate() {
+fn migrate() -> Result<(), diesel_migrations::RunMigrationsError> {
     let database_url = env::var("DATABASE_URL")
         .expect("DATABASE_URL must be set");
     let db_conn = PgConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url));
 
-    embedded_migrations::run(&db_conn);
+    embedded_migrations::run(&db_conn)
 }

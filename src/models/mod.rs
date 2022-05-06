@@ -1,11 +1,10 @@
 use std::collections::HashMap;
-use diesel::prelude::*;
 use serde::{Serialize};
 use uuid::Uuid;
 use crate::constants::DOMAIN;
 use crate::schema::instances;
 
-#[derive(Queryable, Identifiable, Debug, PartialEq, Serialize, Clone)]
+#[derive(Queryable, Identifiable, Insertable, Debug, PartialEq, Serialize, Clone)]
 #[diesel(table_name = crate::models::Instance)]
 pub struct Instance {
     pub id: Uuid,
@@ -15,7 +14,6 @@ pub struct Instance {
     pub studio_container_id: Option<String>,
     pub studio_enabled: bool,
 
-    pub kong_container_id: String,
     pub database_container_id: String,
     pub gotrue_container_id: String,
     pub realtime_container_id: String,
@@ -24,6 +22,38 @@ pub struct Instance {
 }
 
 impl Instance {
+    pub fn to_url(&self) -> String {
+        format!("http://{}.{}", self.hostname, DOMAIN)
+    }
+
+    pub fn get_docker_project_name(&self) -> String {
+        let mut n = "".to_string();
+        if self.nickname.is_some() {
+            n = format!("_{}", self.nickname.as_ref().unwrap())
+        }
+        format!("{}{}", self.hostname.to_string(), n)
+    }
+
+    pub fn to_private_docker_labels(&self) -> HashMap<String, String> {
+        let mut map = HashMap::new();
+
+        for (k, v) in vec![
+            ("supa-manager.instance", self.id.to_string().as_str()),
+            ("traefik.enable", "false"),
+            /*
+                NOTE (HarryET): This is a hack to make docker desktop group the containers together,
+                                I found what label to use by looking at the docker compose v2 source and
+                                the label is in this file:
+                                https://github.com/docker/compose/blob/v2/pkg/api/labels.go#L29
+            */
+            ("com.docker.compose.project", self.get_docker_project_name().as_str()),
+        ] {
+            map.insert(k.to_string(), v.to_string());
+        }
+
+        return map;
+    }
+
     pub fn to_docker_labels(&self, service: String, path: Option<String>, entrypoint: Option<String>, port: Option<String>) -> HashMap<String, String> {
         let mut map = HashMap::new();
 
@@ -35,6 +65,13 @@ impl Instance {
 
         for (k, v) in vec![
             ("supa-manager.instance", self.id.to_string().as_str()),
+            /*
+            NOTE (HarryET): This is a hack to make docker desktop group the containers together,
+                            I found what label to use by looking at the docker compose v2 source and
+                            the label is in this file:
+                            https://github.com/docker/compose/blob/v2/pkg/api/labels.go#L29
+             */
+            ("com.docker.compose.project", self.get_docker_project_name().as_str()),
             ("traefik.enable", "true"),
             (format!("traefik.http.routers.{}-{}.rule", self.hostname, service).as_str(), format!("Host(`{}.{}`){}", self.hostname, DOMAIN, p).as_str()),
             (format!("traefik.http.routers.{}-{}.entrypoints", self.hostname, service).as_str(), entrypoint.unwrap_or("web".to_string()).as_str()),
@@ -51,12 +88,11 @@ impl Instance {
 
 pub fn new_blank_instance() -> Instance {
     Instance {
-        id: Default::default(),
+        id: Uuid::new_v4(),
         nickname: None,
         hostname: cuid::cuid().unwrap(),
         studio_container_id: None,
         studio_enabled: false,
-        kong_container_id: "".to_string(),
         database_container_id: "".to_string(),
         gotrue_container_id: "".to_string(),
         realtime_container_id: "".to_string(),

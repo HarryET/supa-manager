@@ -4,13 +4,12 @@ use bollard::errors::Error;
 use rocket::request::Request;
 use rocket::response::{self, Response, Responder};
 use rocket::http::{ContentType, Status};
-use rocket::serde::json::serde_json::json;
 
 #[derive(Debug)]
 pub enum ApiError {
     DieselError(diesel::result::Error),
     UuidError(uuid::Error),
-    DockerError(bollard::errors::Error)
+    DockerError(Error)
 }
 
 impl<'r> Responder<'r, 'r> for ApiError {
@@ -62,8 +61,8 @@ impl From<uuid::Error> for ApiError {
     }
 }
 
-impl From<bollard::errors::Error> for ApiError {
-    fn from(e: bollard::errors::Error) -> Self {
+impl From<Error> for ApiError {
+    fn from(e: Error) -> Self {
         ApiError::DockerError(e)
     }
 }

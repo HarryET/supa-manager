@@ -26,21 +26,21 @@ async fn get_instance(id: &str, db: PostgresDbConn) -> Result<Json<Instance>, Ap
 }
 
 #[delete("/<id>")]
-async fn delete_instance(id: &str, docker: &State<Docker>) -> String {
+async fn delete_instance(id: &str, _docker: &State<Docker>) -> String {
     format!("Delete an Instance, {}", id)
 }
 
 #[post("/<id>/start")]
-async fn start_instance(id: &str, docker: &State<Docker>) -> String {
+async fn start_instance(id: &str, _docker: &State<Docker>) -> String {
     format!("Delete an Instance, {}", id)
 }
 
 #[post("/<id>/stop")]
-async fn stop_instance(id: &str, docker: &State<Docker>) -> String {
+async fn stop_instance(id: &str, _docker: &State<Docker>) -> String {
     format!("Delete an Instance, {}", id)
 }
 
 #[post("/<id>/restart")]
-async fn restart_instance(id: &str, docker: &State<Docker>) -> String {
+async fn restart_instance(id: &str, _docker: &State<Docker>) -> String {
     format!("Delete an Instance, {}", id)
 }

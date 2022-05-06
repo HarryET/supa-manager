@@ -6,21 +6,21 @@ pub fn routes() -> Vec<Route> {
 }
 
 #[get("/<id>/services/<service>")]
-async fn get_service(id: &str, service: &str, docker: &State<Docker>) -> String {
+async fn get_service(id: &str, service: &str, _docker: &State<Docker>) -> String {
     format!("Get Service, {} for instance, {}", service, id)
 }
 
 #[post("/<id>/services/<service>/start")]
-async fn start_service(id: &str, service: &str, docker: &State<Docker>) -> String {
+async fn start_service(id: &str, service: &str, _docker: &State<Docker>) -> String {
     format!("Start Service, {} for instance, {}", service, id)
 }
 
 #[post("/<id>/services/<service>/stop")]
-async fn stop_service(id: &str, service: &str, docker: &State<Docker>) -> String {
+async fn stop_service(id: &str, service: &str, _docker: &State<Docker>) -> String {
     format!("Stop Service, {} for instance, {}", service, id)
 }
 
 #[post("/<id>/services/<service>/restart")]
-async fn restart_service(id: &str, service: &str, docker: &State<Docker>) -> String {
+async fn restart_service(id: &str, service: &str, _docker: &State<Docker>) -> String {
     format!("Restart Service, {} for instance, {}", service, id)
 }

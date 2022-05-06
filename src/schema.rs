@@ -5,7 +5,6 @@ table! {
         hostname -> Varchar,
         studio_container_id -> Nullable<Text>,
         studio_enabled -> Bool,
-        kong_container_id -> Text,
         database_container_id -> Text,
         gotrue_container_id -> Text,
         realtime_container_id -> Text,
