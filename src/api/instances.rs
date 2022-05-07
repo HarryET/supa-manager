@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use bollard::{container, Docker};
 use bollard::network::CreateNetworkOptions;
 use diesel::QueryDsl;
@@ -15,6 +16,7 @@ use crate::constants::{DB_MIGRATIONS_DIR, DOMAIN};
 use crate::utils::{attach_to_traefik, create_container, new_net_config, start_container, start_containers};
 use std::default::Default;
 use bollard::models::{HostConfig, RestartPolicy, RestartPolicyNameEnum};
+use rocket::response::status;
 
 pub fn routes() -> Vec<Route> {
     routes![get_instances, new_instance]
@@ -84,10 +86,11 @@ fn gen_pg_instance_data() -> PostgresInstanceData {
 
 // TODO optimise!
 #[post("/", data = "<body>")]
-async fn new_instance(body: Json<NewInstance>, docker: &State<Docker>, db: PostgresDbConn) -> Result<Json<Instance>, ApiError> {
+async fn new_instance(body: Json<NewInstance>, docker: &State<Docker>, db: PostgresDbConn) -> Result<status::Created<Json<Instance>>, ApiError> {
     let mut instance = crate::models::new_blank_instance();
     instance.nickname = body.nickname.clone();
     instance.studio_enabled = body.enable_studio.unwrap_or(false);
+    let instance_id = instance.id.clone();
 
     let host_config = HostConfig {
         restart_policy: Some(RestartPolicy {
@@ -199,5 +202,6 @@ async fn new_instance(body: Json<NewInstance>, docker: &State<Docker>, db: Postg
 
     let _ = start_containers(docker, containers).await;
 
-    Ok(Json(db_instance))
+    // TODO make dynamic!
+    Ok(status::Created::<Json<Instance>>::new(Cow::from(format!("http://localhost:8000/instances/{}", instance_id))).body(Json(db_instance)))
 }
