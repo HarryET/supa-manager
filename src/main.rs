@@ -14,6 +14,7 @@ extern crate diesel;
 extern crate diesel_migrations;
 extern crate dotenv;
 
+use std::collections::HashMap;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use dotenv::dotenv;
@@ -22,12 +23,14 @@ use bollard::Docker;
 use diesel_migrations::embed_migrations;
 use crate::constants::{DB_IMAGE, DB_TAG, GOTRUE_IMAGE, GOTRUE_TAG, META_IMAGE, META_TAG, POSTGREST_IMAGE, POSTGREST_TAG, REALTIME_IMAGE, REALTIME_TAG, STUDIO_IMAGE, STUDIO_TAG};
 use crate::database::PostgresDbConn;
+use rocket_dyn_templates::Template;
 
 embed_migrations!();
 
 #[get("/")]
-fn index() -> &'static str {
-    "SupaManager, a project by Harry Bairstow;\nManage self-hosted Supabase instances with an easy to use API & Web Portal (soon)"
+fn index() -> Template {
+    let args: HashMap<String, String> = HashMap::new();
+    Template::render("index", &args)
 }
 
 #[rocket::main]
@@ -46,6 +49,7 @@ async fn main() {
         .mount("/instances", crate::api::instance::routes())
         .mount("/instances", crate::api::service::routes())
         .attach(PostgresDbConn::fairing())
+        .attach(Template::fairing())
         .launch()
         .await;
 }
