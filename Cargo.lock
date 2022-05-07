@@ -1852,6 +1852,7 @@ name = "supa-manager"
 version = "0.1.0"
 dependencies = [
  "bollard",
+ "chrono",
  "cuid",
  "diesel",
  "diesel_migrations",

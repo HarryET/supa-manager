@@ -5,6 +5,7 @@ mod database;
 mod constants;
 mod utils;
 mod config;
+mod ui;
 
 #[macro_use]
 extern crate rocket;
@@ -13,24 +14,23 @@ extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
 extern crate dotenv;
-
-use std::collections::HashMap;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use dotenv::dotenv;
 use std::env;
+use std::path::{Path, PathBuf};
 use bollard::Docker;
 use diesel_migrations::embed_migrations;
+use rocket::fs::NamedFile;
 use crate::constants::{DB_IMAGE, DB_TAG, GOTRUE_IMAGE, GOTRUE_TAG, META_IMAGE, META_TAG, POSTGREST_IMAGE, POSTGREST_TAG, REALTIME_IMAGE, REALTIME_TAG, STUDIO_IMAGE, STUDIO_TAG};
 use crate::database::PostgresDbConn;
 use rocket_dyn_templates::Template;
 
 embed_migrations!();
 
-#[get("/")]
-fn index() -> Template {
-    let args: HashMap<String, String> = HashMap::new();
-    Template::render("index", &args)
+#[get("/<file..>")]
+async fn static_files(file: PathBuf) -> Option<NamedFile> {
+    NamedFile::open(Path::new("public/").join(file)).await.ok()
 }
 
 #[rocket::main]
@@ -43,11 +43,12 @@ async fn main() {
 
     let _ = rocket::build()
         .manage(docker)
-        .mount("/", routes![index])
+        .mount("/", ui::routes())
+        .mount("/public", routes![static_files])
         // TODO Can dynamic route parts be here?
-        .mount("/instances", crate::api::instances::routes())
-        .mount("/instances", crate::api::instance::routes())
-        .mount("/instances", crate::api::service::routes())
+        .mount("/instances", api::instances::routes())
+        .mount("/instances", api::instance::routes())
+        .mount("/instances", api::service::routes())
         .attach(PostgresDbConn::fairing())
         .attach(Template::fairing())
         .launch()

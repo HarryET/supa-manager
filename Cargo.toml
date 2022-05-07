@@ -23,3 +23,5 @@ uuid = { version = "0.8.0", features = ["serde", "v4"] }
 dotenv = "0.15.0"
 
 passwords = "3.1.9"
+
+chrono = "0.4.19"

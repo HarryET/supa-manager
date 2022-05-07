@@ -18,5 +18,7 @@ pub const REALTIME_TAG: &str = "latest";
 pub const META_IMAGE: &str = "supabase/postgres-meta";
 pub const META_TAG: &str = "latest";
 
+// NOTE: THIS WILL ALL BE ENV CONFIG!
 pub const DOMAIN: &str = "localhost";
 pub const DB_MIGRATIONS_DIR: &str = "B:\\Development\\supa-manager\\_docker\\pg\\docker-entrypoint-initdb.d";
+pub const PASSWORD: &str = "password";
