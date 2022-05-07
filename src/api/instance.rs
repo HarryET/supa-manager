@@ -1,3 +1,4 @@
+use bollard::container::{RemoveContainerOptions, StopContainerOptions};
 use bollard::Docker;
 use rocket::{Route, State};
 use rocket::serde::json::Json;
@@ -6,6 +7,7 @@ use crate::models::Instance;
 use crate::PostgresDbConn;
 use crate::schema::*;
 use diesel::prelude::*;
+use rocket::http::Status;
 use uuid::Uuid;
 
 pub fn routes() -> Vec<Route> {
@@ -26,8 +28,45 @@ async fn get_instance(id: &str, db: PostgresDbConn) -> Result<Json<Instance>, Ap
 }
 
 #[delete("/<id>")]
-async fn delete_instance(id: &str, _docker: &State<Docker>) -> String {
-    format!("Delete an Instance, {}", id)
+async fn delete_instance(id: &str, docker: &State<Docker>, db: PostgresDbConn) -> Result<Status, ApiError> {
+    let uuid = Uuid::parse_str(id)?;
+    let instance: Instance = db.run(move |conn| {
+        instances::table
+            .filter(instances::id.eq(uuid))
+            .select(instances::all_columns)
+            .first(conn)
+    }).await?;
+
+    let rm_opts = RemoveContainerOptions {
+        v: true,
+        ..Default::default()
+    };
+
+    let stop_opts = StopContainerOptions {
+        ..Default::default()
+    };
+
+    if instance.studio_enabled {
+        docker.stop_container(instance.studio_container_id.as_ref().unwrap().as_str(), Some(stop_opts)).await?;
+        docker.remove_container(instance.studio_container_id.unwrap().as_str(), Some(rm_opts)).await?;
+    }
+
+    docker.stop_container(instance.postgres_meta_container_id.clone().as_str(), Some(stop_opts)).await?;
+    docker.remove_container(instance.postgres_meta_container_id.as_str(), Some(rm_opts)).await?;
+
+    docker.stop_container(instance.realtime_container_id.clone().as_str(), Some(stop_opts)).await?;
+    docker.remove_container(instance.realtime_container_id.as_str(), Some(rm_opts)).await?;
+
+    docker.stop_container(instance.gotrue_container_id.clone().as_str(), Some(stop_opts)).await?;
+    docker.remove_container(instance.gotrue_container_id.as_str(), Some(rm_opts)).await?;
+
+    docker.stop_container(instance.postgrest_container_id.clone().as_str(), Some(stop_opts)).await?;
+    docker.remove_container(instance.postgrest_container_id.as_str(), Some(rm_opts)).await?;
+    
+    docker.stop_container(instance.database_container_id.clone().as_str(), Some(stop_opts)).await?;
+    docker.remove_container(instance.database_container_id.as_str(), Some(rm_opts)).await?;
+
+    Ok(Status::Ok)
 }
 
 #[post("/<id>/start")]
