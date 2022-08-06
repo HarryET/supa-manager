@@ -1,11 +1,12 @@
 # SupaManager
 A project by Harry Bairstow;<br/>
-Manage self-hosted Supabase instances with an easy to use API & Web Portal (soon)
+Manage self-hosted Supabase instances using the Supabase studio.
 
 <hr />
 
 > ⚠️ **Note:** The project is in active development and as such there are no docs for it, the best thing todo is wait for the project to become more stable. I am in the Supabase discord, however, the best way to reach me is via [my discord server](https://discord.gg/4k5HRe6YEp).
 
+This project is only an API that has to be used in conjunction with the Supabase Studio or another UI. It is a fully functioning API which is based on what Supabase us in production and have as a mock in the Studio project. Please read the guides - when they are available - for information on how to start Supabase's Studio using this as the API.
 
 ## Licence
 Copyright (C) 2022 Harry Bairstow
