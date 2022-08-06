@@ -1,5 +1,7 @@
-/target
 .env
 /.idea
 /.vscode
 *.log
+_build
+.elixir_ls
+deps
