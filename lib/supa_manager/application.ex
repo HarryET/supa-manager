@@ -16,7 +16,8 @@ defmodule SupaManager.Application do
           ip: {0,0,0,0},
           port: Application.get_env(:supa_manager, :port)
         ]
-      }
+      },
+      SupaManager.Repo
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
