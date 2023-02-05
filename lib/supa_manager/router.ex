@@ -5,6 +5,9 @@ defmodule SupaManager.Router do
   # Attach the Logger to log incoming requests
   plug(Plug.Logger)
 
+  # CORS
+  plug(CORSPlug)
+
   # Tell Plug to match the incoming request with the defined endpoints
   plug(:match)
 
@@ -23,6 +26,56 @@ defmodule SupaManager.Router do
   # Handler for GET request with "/" path
   get "/" do
     send_resp(conn, 200, "OK")
+  end
+
+  get "/profile" do
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(200, Jason.encode!(%{
+      "id" => 1,
+      "primary_email" => "admin@supamanager.io",
+      "username" => "admin",
+      "first_name" => "Supa",
+      "last_name" => "Manager",
+      "organizations" => []
+    }))
+  end
+
+  get "/projects" do
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(200, Jason.encode!([
+      %{
+        "id" => 1,
+        "ref" => "mng",
+        "name" => "Managed Project",
+        "organization_id" => 1,
+        "cloud_provider" => "aws",
+        "status" => "UNKNOWN",
+        "region" => "eu-central-1"
+      }
+    ]))
+  end
+
+  get "/organizations" do
+    import Ecto.Query
+
+    orgs = SupaManager.Repo.all(from o in SupaManager.Models.Organization)
+
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(200, Jason.encode!(Enum.map(orgs, fn o -> %{
+      "id" => o.slug,
+      "slug" => o.slug,
+      "name" => o.name,
+      "billing_email" => "admin@supamanager.io"
+    } end)))
+  end
+
+  #? Ignore Telemetry
+  post "/telemetry/:event" do
+    conn
+    |> send_resp(200, "OK")
   end
 
   # Fallback handler when there was no match

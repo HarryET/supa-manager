@@ -24,9 +24,11 @@ defmodule SupaManager.MixProject do
     [
       {:plug_cowboy, "~> 2.5"},
       {:jason, "~> 1.3"},
+      {:cors_plug, "~> 3.0"},
       # Database
       {:ecto_sql, "~> 3.0"},
-      {:postgrex, ">= 0.0.0"}
+      {:postgrex, ">= 0.0.0"},
+      {:uuid, "~> 1.1.8"}
     ]
   end
 end
