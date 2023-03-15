@@ -28,7 +28,11 @@ defmodule SupaManager.MixProject do
       # Database
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.0.0"},
-      {:uuid, "~> 1.1.8"}
+      {:uuid, "~> 1.1"},
+      # K8S
+      {:k8s, "~> 2.1"},
+      # Queues
+      {:oban, "~> 2.14"}
     ]
   end
 end

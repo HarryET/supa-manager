@@ -13,11 +13,12 @@ defmodule SupaManager.Application do
         scheme: :http,
         plug: SupaManager.Router,
         options: [
-          ip: {0,0,0,0},
+          ip: {0, 0, 0, 0},
           port: Application.get_env(:supa_manager, :port)
         ]
       },
-      SupaManager.Repo
+      SupaManager.Repo,
+      {Oban, Application.fetch_env!(:my_app, Oban)}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

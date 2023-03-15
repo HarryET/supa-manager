@@ -1,10 +1,13 @@
 import Config
 
-# Rest API
+# API
 config :supa_manager,
   port: 4000
 
-# Database
+# Oban
+config :my_app, Oban, testing: :inline
+
+# Ecto
 config :supa_manager,
   ecto_repos: [SupaManager.Repo]
 

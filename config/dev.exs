@@ -1,10 +1,10 @@
 import Config
 
-# Rest API
+# API
 config :supa_manager,
   port: 4000
 
-# Database
+# Ecto
 config :supa_manager,
   ecto_repos: [SupaManager.Repo]
 

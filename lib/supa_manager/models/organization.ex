@@ -1,9 +1,9 @@
 defmodule SupaManager.Models.Organization do
-  use Ecto.Schema
-  @primary_key {:slug, :string, autogenerate: {SupaManager.Models.Utils, :gen_id, []}}
+  use SupaManager.Models.Schema
 
   schema "organizations" do
-    field :name, :string
+    field(:slug, :string)
+    field(:name, :string)
 
     timestamps()
   end

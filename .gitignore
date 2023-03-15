@@ -1,7 +1,12 @@
 .env
-/.idea
-/.vscode
 *.log
 _build
 .elixir_ls
 deps
+
+# Editors
+/.idea
+/.vscode
+
+# MacOS
+.DS_Store
