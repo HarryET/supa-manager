@@ -3,6 +3,9 @@ import Config
 # GoTrue
 config :supa_manager, allow_signup: System.get_env("ALLOW_SIGNUP", "true") == "true"
 
+# Deployment
+config :supa_manager, supabase_host: System.get_env("SUPABASE_HOST", "localhost:4000")
+
 if Mix.env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||
@@ -55,4 +58,14 @@ if Mix.env() == :prod do
       """
 
   config :joken, default_signer: jwt_secret
+
+  # Encryption
+  encryption_key =
+    System.get_env("ENCRYPTION_KEY") ||
+      raise """
+      environment variable ENCRYPTION_KEY is missing.
+      You can generate one by calling: mix phx.gen.secret
+      """
+
+  config :supa_manager, SupaManager.Encryption, password: encryption_key
 end

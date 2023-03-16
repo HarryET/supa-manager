@@ -53,33 +53,19 @@ defmodule SupaManager.Controllers.Users do
         _ ->
           conn
           |> put_status(500)
-          |> json(%{error: "Failed to generate token"})
+          |> json(%{message: "Failed to generate token"})
       end
     else
       _ ->
         conn
         |> put_status(401)
-        |> json(%{error: "Bad Request: Invalid Login"})
+        |> json(%{message: "Bad Request: Invalid Login"})
     end
   end
 
   def login(conn, _params) do
     conn
     |> put_status(400)
-    |> json(%{error: "Bad Request: Must be password grant login"})
-  end
-
-  def profile(conn, _params) do
-    user = conn.assigns[:current_user]
-
-    conn
-    |> put_status(200)
-    |> json(%{
-      id: user.id,
-      primary_email: user.email,
-      username: user.username,
-      first_name: user.first_name,
-      last_name: user.last_name
-    })
+    |> json(%{message: "Bad Request: Must be password grant login"})
   end
 end

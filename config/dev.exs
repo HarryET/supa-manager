@@ -15,5 +15,8 @@ config :supa_manager, SupaManager.Repo,
   password: "postgres",
   hostname: "localhost"
 
+# Encryption
+config :supa_manager, SupaManager.Encryption, password: "password"
+
 # Logger
 config :logger, :console, format: "[$level] $message\n"

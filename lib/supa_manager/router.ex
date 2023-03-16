@@ -31,6 +31,7 @@ defmodule SupaManager.Router do
       scope "/profile" do
         get("/", Profile, :index)
         get("/permissions", Profile, :permissions)
+        post("/password-check", Profile, :password_check)
       end
 
       scope "/organizations" do
@@ -48,6 +49,13 @@ defmodule SupaManager.Router do
 
       scope "/projects" do
         get("/", Projects, :list)
+        post("/", Projects, :create)
+
+        scope "/:id" do
+          get("/", Projects, :get)
+          get("/usage", Usage, :for_project)
+          get("/subscription", Billing, :project_subscription)
+        end
       end
 
       get "/stripe/invoices/overdue", Billing, :overdue_invoices

@@ -58,7 +58,7 @@ defmodule SupaManager.Controllers.Organizations do
 
         conn
         |> put_status(500)
-        |> json(%{error: "Internal Server Error"})
+        |> json(%{message: "Internal Server Error"})
     end
   end
 

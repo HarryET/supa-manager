@@ -7,7 +7,8 @@ defmodule SupaManager.MixProject do
       version: "0.1.0",
       elixir: "~> 1.14-rc",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      aliases: aliases()
     ]
   end
 
@@ -36,7 +37,16 @@ defmodule SupaManager.MixProject do
       {:oban, "~> 2.14"},
       # Security
       {:argon2_elixir, "~> 3.0"},
-      {:joken, "~> 2.6"}
+      {:joken, "~> 2.6"},
+      {:pbcs, "~> 0.1"}
+    ]
+  end
+
+  defp aliases do
+    [
+      setup: ["deps.get", "ecto.setup"],
+      "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
+      "ecto.reset": ["ecto.drop", "ecto.setup"]
     ]
   end
 end
