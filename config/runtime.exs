@@ -1,5 +1,8 @@
 import Config
 
+# GoTrue
+config :supa_manager, allow_signup: System.get_env("ALLOW_SIGNUP", "true") == "true"
+
 if Mix.env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||
@@ -31,7 +34,7 @@ if Mix.env() == :prod do
   host = System.get_env("HOST") || "supamanager.io"
   port = String.to_integer(System.get_env("PORT") || "4000")
 
-  config :connect_four, SupaManager.Endpoint,
+  config :supa_manager, SupaManager.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
     http: [
       # Enable IPv6 and bind on all interfaces.
@@ -42,4 +45,14 @@ if Mix.env() == :prod do
       port: port
     ],
     secret_key_base: secret_key_base
+
+  # JWTs
+  jwt_secret =
+    System.get_env("JWT_SECRET") ||
+      raise """
+      environment variable JWT_SECRET is missing.
+      You can generate one by calling: mix phx.gen.secret
+      """
+
+  config :joken, default_signer: jwt_secret
 end

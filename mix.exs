@@ -33,7 +33,10 @@ defmodule SupaManager.MixProject do
       # K8S
       {:k8s, "~> 2.1"},
       # Queues
-      {:oban, "~> 2.14"}
+      {:oban, "~> 2.14"},
+      # Security
+      {:argon2_elixir, "~> 3.0"},
+      {:joken, "~> 2.6"}
     ]
   end
 end
