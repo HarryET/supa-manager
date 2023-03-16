@@ -9,6 +9,9 @@ defmodule SupaManager.Models.User do
     field(:first_name, :string)
     field(:last_name, :string)
 
+    many_to_many :organizations, SupaManager.Models.Organization,
+      join_through: SupaManager.Models.Links.OrganizationMember
+
     timestamps()
   end
 

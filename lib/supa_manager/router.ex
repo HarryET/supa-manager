@@ -33,6 +33,23 @@ defmodule SupaManager.Router do
         get("/permissions", Profile, :permissions)
       end
 
+      scope "/organizations" do
+        get("/", Organizations, :list)
+        post("/", Organizations, :create)
+
+        scope "/:slug" do
+          scope "/members" do
+            get("/reached-free-project-limit", Organizations, :free_tier_limit)
+          end
+
+          get "/payments", Billing, :org_payments
+        end
+      end
+
+      scope "/projects" do
+        get("/", Projects, :list)
+      end
+
       get "/stripe/invoices/overdue", Billing, :overdue_invoices
     end
 

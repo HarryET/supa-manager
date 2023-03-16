@@ -12,4 +12,10 @@ defmodule SupaManager.Controllers.Billing do
     |> put_status(200)
     |> json([])
   end
+
+  def org_payments(conn, _params) do
+    conn
+    |> put_status(200)
+    |> json([])
+  end
 end

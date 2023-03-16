@@ -1,26 +1,27 @@
 defmodule SupaManager.Controllers.Projects do
   use SupaManager, :controller
 
-  # get "/projects" do
-  #   conn
-  #   |> put_resp_content_type("application/json")
-  #   |> send_resp(
-  #     200,
-  #     Jason.encode!([
-  #       %{
-  #         "id" => 1,
-  #         "ref" => "mng",
-  #         "name" => "Managed Project",
-  #         "organization_id" => 1,
-  #         "cloud_provider" => "aws",
-  #         "status" => "UNKNOWN",
-  #         "region" => "eu-central-1"
-  #       }
-  #     ])
-  #   )
-  # end
+  alias SupaManager.Repo
 
   def list(conn, _params) do
-    send_resp(conn, 500, "todo: implement")
+    user = Repo.preload(conn.assigns[:current_user], organizations: [:projects])
+
+    projects = Enum.flat_map(user.organizations, fn o -> o.projects end)
+
+    conn
+    |> put_status(200)
+    |> json(
+      Enum.map(projects, fn p ->
+        %{
+          id: p.id,
+          ref: p.id,
+          name: p.name,
+          organization_id: p.organization_id,
+          cloud_provider: "aws",
+          status: p.status,
+          region: "eu-central-1"
+        }
+      end)
+    )
   end
 end
