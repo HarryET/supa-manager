@@ -26,7 +26,14 @@ defmodule SupaManager.Router do
     scope "/" do
       pipe_through(:authenticated)
 
-      get("/profile", Users, :profile)
+      get "/notifications", Notification, :list
+
+      scope "/profile" do
+        get("/", Profile, :index)
+        get("/permissions", Profile, :permissions)
+      end
+
+      get "/stripe/invoices/overdue", Billing, :overdue_invoices
     end
 
     scope "/telemetry" do
