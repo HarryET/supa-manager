@@ -1,18 +1,29 @@
 defmodule SupaManager do
   @moduledoc """
-  Documentation for `SupaManager`.
+  Manage self-hosted Supabase instances using the Supabase studio.
   """
 
-  @doc """
-  Hello world.
+  # A Project by Harry Bairstow
 
-  ## Examples
+  def router do
+    quote do
+      use Phoenix.Router, helpers: false
+      import Plug.Conn
+      import Phoenix.Controller
+    end
+  end
 
-      iex> SupaManager.hello()
-      :world
+  def controller do
+    quote do
+      use Phoenix.Controller,
+        namespace: SupaManager,
+        formats: [:json]
 
-  """
-  def hello do
-    :world
+      import Plug.Conn
+    end
+  end
+
+  defmacro __using__(which) when is_atom(which) do
+    apply(__MODULE__, which, [])
   end
 end

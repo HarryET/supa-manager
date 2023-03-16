@@ -8,17 +8,9 @@ defmodule SupaManager.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      {
-        Plug.Cowboy,
-        scheme: :http,
-        plug: SupaManager.Router,
-        options: [
-          ip: {0, 0, 0, 0},
-          port: Application.get_env(:supa_manager, :port)
-        ]
-      },
+      SupaManager.Endpoint,
       SupaManager.Repo,
-      {Oban, Application.fetch_env!(:my_app, Oban)}
+      {Oban, Application.fetch_env!(:supa_manager, Oban)}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

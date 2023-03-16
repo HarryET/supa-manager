@@ -22,9 +22,10 @@ defmodule SupaManager.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:plug_cowboy, "~> 2.5"},
+      {:plug_cowboy, "~> 2.6"},
       {:jason, "~> 1.3"},
       {:cors_plug, "~> 3.0"},
+      {:phoenix, "~> 1.7"},
       # Database
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.0.0"},
