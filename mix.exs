@@ -32,7 +32,7 @@ defmodule SupaManager.MixProject do
       {:postgrex, ">= 0.0.0"},
       {:uuid, "~> 1.1"},
       # K8S
-      {:k8s, "~> 2.1"},
+      {:kazan, git: "https://github.com/HarryET/kazan.git"},
       # Queues
       {:oban, "~> 2.14"},
       # Security

@@ -1,10 +1,27 @@
 import Config
 
 # GoTrue
-config :supa_manager, allow_signup: System.get_env("ALLOW_SIGNUP", "true") == "true"
+config :supa_manager,
+  allow_signup: System.get_env("ALLOW_SIGNUP", "true") == "true"
 
 # Deployment
-config :supa_manager, supabase_host: System.get_env("SUPABASE_HOST", "localhost:4000")
+config :supa_manager,
+  supabase_host: System.get_env("SUPABASE_HOST", "localhost:4000")
+
+# Kubernetes
+k8s_token =
+  System.get_env("K8S_TOKEN") ||
+    raise """
+    environment variable K8S_TOKEN is missing.
+    """
+
+k8s_url =
+  System.get_env("K8S_URL") ||
+    raise """
+    environment variable K8S_URL is missing.
+    """
+
+config :kazan, :server, %{url: k8s_url, auth: %{token: k8s_token}, insecure_skip_tls_verify: true}
 
 if Mix.env() == :prod do
   database_url =

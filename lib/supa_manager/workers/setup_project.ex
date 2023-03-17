@@ -9,10 +9,17 @@ defmodule SupaManager.Workers.SetupProject do
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: %{"id" => id} = _args}) do
-    with %Project{} <- Repo.one(from p in Project, where: p.id == ^id) do
-      # TODO setup all services
+    with %Project{} = proj <- Repo.one(from(p in Project, where: p.id == ^id)) do
       Logger.info("Setup Project (#{id})")
-      :ok
+
+      case SupaManager.Core.Kubernetes.Pod.new(proj.id, :postgres) do
+        {:ok, _pod} ->
+          Logger.info("Started postgres pod")
+
+        {:error, error} ->
+          Logger.error("Failed to start postgres")
+          {:error, error}
+      end
     else
       _ -> {:error, "Couldn't find project"}
     end

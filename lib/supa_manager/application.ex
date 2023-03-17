@@ -13,6 +13,13 @@ defmodule SupaManager.Application do
       {Oban, Application.fetch_env!(:supa_manager, Oban)}
     ]
 
+    :telemetry.attach(
+      "oban-logger",
+      [:oban, :job, :exception],
+      &SupaManager.Core.ObanLogger.handle_event/4,
+      nil
+    )
+
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: SupaManager.Supervisor]
