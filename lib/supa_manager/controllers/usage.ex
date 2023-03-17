@@ -5,9 +5,9 @@ defmodule SupaManager.Controllers.Usage do
   alias SupaManager.Repo
   alias SupaManager.Models.Project
 
-  def for_project(conn, %{"id" => id}) do
+  def for_project(conn, %{"ref" => ref}) do
     # TODO load services
-    with %Project{} = proj <- Repo.one(from p in Project, where: p.id == ^id) do
+    with %Project{} = proj <- Repo.one(from(p in Project, where: p.ref == ^ref)) do
       if proj.status == "COMING_UP" do
         conn
         |> put_status(400)

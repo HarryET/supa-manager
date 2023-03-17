@@ -21,7 +21,11 @@ k8s_url =
     environment variable K8S_URL is missing.
     """
 
-config :kazan, :server, %{url: k8s_url, auth: %{token: k8s_token}, insecure_skip_tls_verify: true}
+config :kazan, :server, %{
+  url: k8s_url,
+  auth: %{token: k8s_token},
+  insecure_skip_tls_verify: true
+}
 
 if Mix.env() == :prod do
   database_url =

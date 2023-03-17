@@ -1,7 +1,7 @@
 defmodule SupaManager.Core.Kubernetes.Pod do
-  @spec new(any, SupaManager.Core.Kubernetes.service()) ::
+  @spec new(any, SupaManager.Core.Kubernetes.service(), list(Kazan.Apis.Core.V1.EnvVar)) ::
           {:ok, Kazan.Apis.Core.V1.Pod.t()} | {:error, any}
-  def new(project_id, service) do
+  def new(project_id, service, env) do
     image = SupaManager.Core.Versions.get_image(service)
     version = SupaManager.Core.Versions.get_version(service)
 
@@ -20,7 +20,8 @@ defmodule SupaManager.Core.Kubernetes.Pod do
             containers: [
               %Kazan.Apis.Core.V1.Container{
                 name: "#{service}",
-                image: "#{image}:#{version}"
+                image: "#{image}:#{version}",
+                env: env
               }
             ]
           }

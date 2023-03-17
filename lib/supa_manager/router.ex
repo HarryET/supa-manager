@@ -51,11 +51,17 @@ defmodule SupaManager.Router do
         get("/", Projects, :list)
         post("/", Projects, :create)
 
-        scope "/:id" do
+        scope "/:ref" do
           get("/", Projects, :get)
+          get("/status", Projects, :status)
           get("/usage", Usage, :for_project)
           get("/subscription", Billing, :project_subscription)
         end
+      end
+
+      scope "/props/project/:ref" do
+        get("/jwt-secret-update-status", ProjectProps, :jwt_secret_update_status)
+        get("/settings", ProjectProps, :settings)
       end
 
       get "/stripe/invoices/overdue", Billing, :overdue_invoices

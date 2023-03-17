@@ -15,7 +15,7 @@ defmodule SupaManager.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger],
+      extra_applications: [:logger, :snowflake],
       mod: {SupaManager.Application, []}
     ]
   end
@@ -38,7 +38,9 @@ defmodule SupaManager.MixProject do
       # Security
       {:argon2_elixir, "~> 3.0"},
       {:joken, "~> 2.6"},
-      {:pbcs, "~> 0.1"}
+      {:pbcs, "~> 0.1"},
+      # ID Generator
+      {:snowflake, "~> 1.0"}
     ]
   end
 

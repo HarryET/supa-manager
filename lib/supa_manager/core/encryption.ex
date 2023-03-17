@@ -1,4 +1,4 @@
-defmodule SupaManager.Encryption do
+defmodule SupaManager.Core.Encryption do
   @tag "SUPAMANAGER"
 
   @spec encrypt(binary) :: binary | {:error, binary}
@@ -13,7 +13,7 @@ defmodule SupaManager.Encryption do
     PBCS.encrypt({@tag, plain_text}, protected, password: password())
   end
 
-  @spec decrypt(binary) :: binary | {:error, String.t()} | :error
+  @spec decrypt(binary) :: {:ok, binary} | {:error, String.t()} | :error
   def decrypt(cipher_text) do
     PBCS.decrypt({@tag, cipher_text}, password: password())
   end

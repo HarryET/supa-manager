@@ -16,7 +16,7 @@ defmodule SupaManager.Controllers.Projects do
       Enum.map(projects, fn p ->
         %{
           id: p.id,
-          ref: p.id,
+          ref: p.ref,
           name: p.name,
           organization_id: p.organization_id,
           cloud_provider: "aws",
@@ -28,19 +28,43 @@ defmodule SupaManager.Controllers.Projects do
     )
   end
 
-  def get(conn, %{"id" => id} = _params) do
-    with %Project{} = proj <- Repo.one(from p in Project, where: p.id == ^id) do
+  def get(conn, %{"ref" => ref} = _params) do
+    with %Project{} = proj <- Repo.one(from p in Project, where: p.ref == ^ref) do
       conn
       |> put_status(200)
       |> json(%{
         id: proj.id,
-        ref: proj.id,
+        ref: proj.ref,
         name: proj.name,
         organization_id: proj.organization_id,
-        cloud_provider: "aws",
+        cloud_provider: proj.cloud_provider,
         status: proj.status,
-        region: "eu-central-1",
-        inserted_at: proj.inserted_at
+        region: proj.region,
+        inserted_at: proj.inserted_at,
+        subscription_id: "not-implemented",
+        db_host: proj.db_host,
+        restUrl: SupaManager.Core.Domains.get(proj.ref) <> "/rest/v1/",
+        connectionString: "encrypted rubbish",
+        # TODO store db version in project row
+        dbVersion: "supabase-postgres-#{SupaManager.Core.Versions.get_version(:postgres)}",
+        kpsVersion: "supabase-postgres-#{SupaManager.Core.Versions.get_version(:postgres)}"
+      })
+    else
+      _ ->
+        conn
+        |> put_status(404)
+        |> json(%{
+          message: "Project not found"
+        })
+    end
+  end
+
+  def status(conn, %{"ref" => ref} = _params) do
+    with %Project{} = proj <- Repo.one(from p in Project, where: p.ref == ^ref) do
+      conn
+      |> put_status(200)
+      |> json(%{
+        status: proj.status
       })
     else
       _ ->
@@ -58,23 +82,30 @@ defmodule SupaManager.Controllers.Projects do
           "cloud_provider" => _provider,
           "db_pass" => db_pass,
           "db_pricing_tier_id" => _tier,
-          "db_region" => _region,
+          "db_region" => region,
           "name" => name,
           "org_id" => org_id
         } = _params
       ) do
-    with encrypted_pass <- SupaManager.Encryption.encrypt(db_pass),
+    {:ok, ref_i} = Snowflake.next_id()
+    ref = "#{ref_i}"
+
+    with encrypted_pass <- SupaManager.Core.Encryption.encrypt(db_pass),
          true <- is_binary(encrypted_pass),
          {:ok, %Project{} = proj} <-
            Repo.insert(
              %Project{}
              |> Project.changeset(%{
                name: name,
+               ref: ref,
                organization_id: org_id,
-               status: "UNKNOWN",
+               status: "COMING_UP",
                db_password: encrypted_pass,
                db_username: "postgres",
-               db_status: :pending
+               db_host: SupaManager.Core.Domains.get_db(ref),
+               db_port: "5432",
+               db_status: :pending,
+               region: region
              })
            ) do
       %{id: proj.id}
@@ -85,21 +116,23 @@ defmodule SupaManager.Controllers.Projects do
       |> put_status(201)
       |> json(%{
         id: proj.id,
-        ref: proj.id,
+        ref: proj.ref,
         name: proj.name,
         status: proj.status,
         organization_id: proj.organization_id,
-        cloud_provider: "aws",
-        region: "eu-central-1",
+        cloud_provider: "supamanager",
+        region: "self-host",
         inserted_at: proj.inserted_at,
         subscription_id: "sub_not_implemented",
-        endpoint: "https://#{proj.id}.#{Application.get_env(:supa_manager, :supabase_host)}",
+        endpoint: "https://#{SupaManager.Core.Domains.get(proj.ref)}",
         # TODO - generate anon_key and service_key
         anon_key: "not_implemented",
         service_key: "not_implemented"
       })
     else
-      _ ->
+      e ->
+        IO.inspect(e)
+
         conn
         |> put_status(500)
         |> json(%{message: "Failed to create project"})
