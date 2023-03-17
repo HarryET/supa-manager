@@ -16,10 +16,9 @@ defmodule SupaManagerTest.Router do
   # https://hexdocs.pm/plug/Plug.html#c:init/1
   @opts SupaManager.Router.init([])
 
-
   # Create a test with the name "return ok"
   test "return ok" do
-  	# Build a connection which is GET request on / url
+    # Build a connection which is GET request on / url
     conn = conn(:get, "/")
 
     # Then call Plug.call/2 with the connection and options
