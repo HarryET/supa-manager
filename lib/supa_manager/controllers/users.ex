@@ -46,7 +46,10 @@ defmodule SupaManager.Controllers.Users do
           # https://github.com/supabase/gotrue/blob/aaf2765d84ec4f56582f2ba550f8015c79c2bf22/internal/models/user.go#L19-L70
           user: %{
             id: user.id,
-            email: user.email
+            email: user.email,
+            app_metadata: %{
+              provider: "email"
+            }
           }
         })
       else

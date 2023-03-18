@@ -10,7 +10,10 @@ defmodule SupaManager.Workers.SetupProject do
   @impl Oban.Worker
   def perform(%Oban.Job{args: %{"id" => id} = _args}) do
     with %Project{} = proj <- Repo.one(from(p in Project, where: p.id == ^id)) do
-      Logger.info("Setup Project (#{id})")
+      Logger.info("[#{id}] Starting services")
+
+      # Update DB to COMING_UP
+      proj = Repo.update!(Project.update_status_changeset(proj, %{status: "COMING_UP"}))
 
       {:ok, db_pass} = SupaManager.Core.Encryption.decrypt(proj.db_password)
 
@@ -19,6 +22,7 @@ defmodule SupaManager.Workers.SetupProject do
           name: "POSTGRES_USER",
           value: proj.db_username
         },
+        # TODO make a secret
         %Kazan.Apis.Core.V1.EnvVar{
           name: "POSTGRES_PASSWORD",
           value: db_pass
@@ -27,7 +31,16 @@ defmodule SupaManager.Workers.SetupProject do
 
       case SupaManager.Core.Kubernetes.Pod.new(proj.id, :postgres, env) do
         {:ok, _pod} ->
-          Logger.info("Started postgres pod")
+          Logger.info("[#{id}] Started postgres")
+          # TODO update project status
+          proj = Repo.update!(Project.update_db_status_changeset(proj, %{db_status: :ready}))
+
+          SupaManager.Core.Hooks.update_dns(%{
+            project_id: proj.id,
+            dns_name: SupaManager.Core.Domains.get_db(proj.ref),
+            action: :create,
+            reason: :new_project
+          })
 
         {:error, error} ->
           Logger.error("Failed to start postgres")

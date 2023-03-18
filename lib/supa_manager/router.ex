@@ -15,6 +15,7 @@ defmodule SupaManager.Router do
     pipe_through(:api)
 
     get("/", Core, :index)
+    get("/status", Core, :status)
 
     post("/signup", Users, :signup)
 
@@ -69,6 +70,12 @@ defmodule SupaManager.Router do
 
     scope "/telemetry" do
       match(:*, "/*any", Telemetry, :discard)
+    end
+
+    if Mix.env() in [:dev] do
+      scope "/dev" do
+        post("/hooks", Hooks.Dev, :handle_hook)
+      end
     end
   end
 end

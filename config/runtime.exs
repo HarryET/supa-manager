@@ -88,5 +88,22 @@ if Mix.env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
-  config :supa_manager, SupaManager.Encryption, password: encryption_key
+  config :supa_manager, SupaManager.Core.Encryption, password: encryption_key
+
+  # Webhooks
+  hook_url =
+    System.get_env("HOOK_URL") ||
+      raise """
+      environment variable HOOK_URL is missing.
+      """
+
+  hook_secret =
+    System.get_env("HOOK_SECRET") ||
+      raise """
+      environment variable HOOK_SECRET is missing.
+      """
+
+  config :supa_manager, SupaManager.Core.Hooks,
+    url: hook_url,
+    secret: hook_secret
 end

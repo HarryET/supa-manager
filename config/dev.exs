@@ -16,7 +16,12 @@ config :supa_manager, SupaManager.Repo,
   hostname: "localhost"
 
 # Encryption
-config :supa_manager, SupaManager.Encryption, password: "password"
+config :supa_manager, SupaManager.Core.Encryption, password: "password"
 
 # Logger
 config :logger, :console, format: "[$level] $message\n"
+
+# Webhooks
+config :supa_manager, SupaManager.Core.Hooks,
+  url: "http://localhost:4000/dev/hooks",
+  secret: "hook-secret"

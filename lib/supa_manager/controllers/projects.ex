@@ -44,7 +44,8 @@ defmodule SupaManager.Controllers.Projects do
         subscription_id: "not-implemented",
         db_host: proj.db_host,
         restUrl: SupaManager.Core.Domains.get(proj.ref) <> "/rest/v1/",
-        connectionString: "encrypted rubbish",
+        # ? Note: Speak to Supabase about how to deal with this
+        connectionString: nil,
         # TODO store db version in project row
         dbVersion: "supabase-postgres-#{SupaManager.Core.Versions.get_version(:postgres)}",
         kpsVersion: "supabase-postgres-#{SupaManager.Core.Versions.get_version(:postgres)}"
@@ -76,6 +77,11 @@ defmodule SupaManager.Controllers.Projects do
     end
   end
 
+  defp generate_jwt_secret do
+    symbols = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789%$#@!'
+    for _ <- 1..25, into: "", do: <<Enum.random(symbols)>>
+  end
+
   def create(
         conn,
         %{
@@ -92,6 +98,9 @@ defmodule SupaManager.Controllers.Projects do
 
     with encrypted_pass <- SupaManager.Core.Encryption.encrypt(db_pass),
          true <- is_binary(encrypted_pass),
+         jwt_secret = generate_jwt_secret(),
+         encrypted_jwt_secret <- SupaManager.Core.Encryption.encrypt(jwt_secret),
+         true <- is_binary(encrypted_jwt_secret),
          {:ok, %Project{} = proj} <-
            Repo.insert(
              %Project{}
@@ -99,13 +108,14 @@ defmodule SupaManager.Controllers.Projects do
                name: name,
                ref: ref,
                organization_id: org_id,
-               status: "COMING_UP",
+               status: "UNKNOWN",
                db_password: encrypted_pass,
                db_username: "postgres",
                db_host: SupaManager.Core.Domains.get_db(ref),
                db_port: "5432",
                db_status: :pending,
-               region: region
+               region: region,
+               jwt_secret: encrypted_jwt_secret
              })
            ) do
       %{id: proj.id}

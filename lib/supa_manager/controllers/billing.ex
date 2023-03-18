@@ -31,13 +31,13 @@ defmodule SupaManager.Controllers.Billing do
         current_period_start: 1_678_209_805
       },
       tier: %{
-        key: "FREE",
-        name: "Free tier",
+        key: "ENTERPRISE",
+        name: "Enterprise Tier",
         # ? Note: From Supabase
-        price_id: "price_1IUYQkJDPojXS6LNPlPj8cmd",
+        price_id: nil,
         # ? Note: From Supabase
-        prod_id: "prod_J6lyomOwmaOcdA",
-        supabase_prod_id: "tier_free",
+        prod_id: nil,
+        supabase_prod_id: "tier_enterprise",
         unit_amount: 0
       }
     })

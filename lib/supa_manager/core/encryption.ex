@@ -19,6 +19,6 @@ defmodule SupaManager.Core.Encryption do
   end
 
   defp password do
-    Application.get_env(:supa_manager, SupaManager.Encryption)[:password]
+    Application.get_env(:supa_manager, SupaManager.Core.Encryption)[:password]
   end
 end

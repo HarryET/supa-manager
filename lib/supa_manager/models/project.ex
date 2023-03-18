@@ -15,6 +15,8 @@ defmodule SupaManager.Models.Project do
     field :cloud_provider, :string
     field :region, :string
 
+    field :jwt_secret, :string
+
     belongs_to(:organization, SupaManager.Models.Organization)
 
     timestamps()
@@ -33,7 +35,8 @@ defmodule SupaManager.Models.Project do
       :db_port,
       :db_status,
       :cloud_provider,
-      :region
+      :region,
+      :jwt_secret
     ])
     |> validate_required([
       :name,
@@ -45,8 +48,21 @@ defmodule SupaManager.Models.Project do
       :db_host,
       :db_port,
       :db_status,
-      :region
+      :region,
+      :jwt_secret
     ])
     |> cast_assoc(:organization)
+  end
+
+  def update_status_changeset(project, attrs) do
+    project
+    |> cast(attrs, [:status])
+    |> validate_required([:status])
+  end
+
+  def update_db_status_changeset(project, attrs) do
+    project
+    |> cast(attrs, [:db_status])
+    |> validate_required([:db_status])
   end
 end
