@@ -114,7 +114,7 @@ defmodule SupaManager.Controllers.Projects do
                db_host: SupaManager.Core.Domains.get_db(ref),
                db_port: "5432",
                db_status: :pending,
-               region: region,
+               region: SupaManager.Core.Infrastructure.aws_region(region),
                jwt_secret: encrypted_jwt_secret
              })
            ) do
