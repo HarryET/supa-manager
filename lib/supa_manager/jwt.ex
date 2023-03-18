@@ -5,7 +5,6 @@ defmodule SupaManager.Jwt do
 
   @impl true
   def token_config do
-    default_claims()
-    |> add_claim("aud", fn -> @aud end, &(&1 == @aud))
+    default_claims(iss: @aud, aud: @aud)
   end
 end

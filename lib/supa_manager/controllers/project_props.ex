@@ -64,12 +64,12 @@ defmodule SupaManager.Controllers.ProjectProps do
               %{
                 tags: "anon",
                 name: "anon key",
-                api_key: SupaManager.Core.ApiKeys.anon_key(proj, jwt_secret)
+                api_key: SupaManager.Core.ApiKeys.anon_key!(proj, jwt_secret)
               },
               %{
                 tags: "service_role",
                 name: "service_role key",
-                api_key: SupaManager.Core.ApiKeys.service_key(proj, jwt_secret)
+                api_key: SupaManager.Core.ApiKeys.service_key!(proj, jwt_secret)
               }
             ]
           }
