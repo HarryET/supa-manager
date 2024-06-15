@@ -1,0 +1,293 @@
+diff --git a/apps/studio/components/interfaces/Organization/BillingSettings/Subscription/ExitSurveyModal.tsx b/apps/studio/components/interfaces/Organization/BillingSettings/Subscription/ExitSurveyModal.tsx
+index 7cb44fc..335a3d2 100644
+--- a/apps/studio/components/interfaces/Organization/BillingSettings/Subscription/ExitSurveyModal.tsx
++++ b/apps/studio/components/interfaces/Organization/BillingSettings/Subscription/ExitSurveyModal.tsx
+@@ -53,8 +53,12 @@ const ExitSurveyModal = ({ visible, subscription, onClose }: ExitSurveyModalProp
+   }
+ 
+   const resetCaptcha = () => {
+-    setCaptchaToken(null)
+-    captchaRef.current?.resetCaptcha()
++    try {
++      setCaptchaToken(null)
++      captchaRef.current?.resetCaptcha()
++    } catch (e) {
++      console.warn('Failed to reset captcha', e);
++    }
+   }
+ 
+   const onSubmit = async () => {
+@@ -63,12 +67,17 @@ const ExitSurveyModal = ({ visible, subscription, onClose }: ExitSurveyModalProp
+     }
+ 
+     let token = captchaToken
+-
+-    if (!token) {
+-      const captchaResponse = await captchaRef.current?.execute({ async: true })
+-      token = captchaResponse?.response ?? null
+-      await downgradeOrganization()
++    try {
++      if (!token) {
++        const captchaResponse = await captchaRef.current?.execute({ async: true })
++        token = captchaResponse?.response ?? null
++      }
++    } catch (e) {
++      console.warn('Failed to execute captcha, continuing without captcha', e);
++      token = null
+     }
++
++    await downgradeOrganization()
+   }
+ 
+   const downgradeOrganization = async () => {
+@@ -146,14 +155,13 @@ const ExitSurveyModal = ({ visible, subscription, onClose }: ExitSurveyModalProp
+                     <label
+                       key={option}
+                       className={`
+-                      flex cursor-pointer items-center space-x-2 rounded-md py-1 
++                      flex cursor-pointer items-center space-x-2 rounded-md py-1
+                       pl-2 pr-3 text-center text-sm
+                       shadow-sm transition-all duration-100
+-                      ${
+-                        active
++                      ${active
+                           ? ` bg-foreground text-background opacity-100 hover:bg-opacity-75`
+                           : ` bg-border-strong text-foreground opacity-25 hover:opacity-50`
+-                      }
++                        }
+                   `}
+                     >
+                       <input
+@@ -182,9 +190,8 @@ const ExitSurveyModal = ({ visible, subscription, onClose }: ExitSurveyModalProp
+               <Alert
+                 withIcon
+                 variant="warning"
+-                title={`${projectsWithComputeInstances.length} of your project${
+-                  projectsWithComputeInstances.length > 1 ? 's' : ''
+-                } will be restarted upon hitting confirm`}
++                title={`${projectsWithComputeInstances.length} of your project${projectsWithComputeInstances.length > 1 ? 's' : ''
++                  } will be restarted upon hitting confirm`}
+               >
+                 This is due to changes in compute instances from the downgrade. Affected project(s)
+                 include {projectsWithComputeInstances.map((project) => project.name).join(', ')}.
+diff --git a/apps/studio/components/interfaces/SignIn/ForgotPasswordForm.tsx b/apps/studio/components/interfaces/SignIn/ForgotPasswordForm.tsx
+index 0c5630b..0ee1669 100644
+--- a/apps/studio/components/interfaces/SignIn/ForgotPasswordForm.tsx
++++ b/apps/studio/components/interfaces/SignIn/ForgotPasswordForm.tsx
+@@ -25,27 +25,35 @@ const ForgotPasswordForm = () => {
+       await router.push('/sign-in')
+     },
+     onError: (error) => {
+-      setCaptchaToken(null)
+-      captchaRef.current?.resetCaptcha()
++      try {
++        setCaptchaToken(null)
++        captchaRef.current?.resetCaptcha()
++      } catch (e) {
++        console.warn('Failed to reset captcha', e);
++      }
+       toast.error(`Failed to send reset email: ${error.message}`)
+     },
+   })
+ 
+   const onForgotPassword = async ({ email }: { email: string }) => {
+     let token = captchaToken
+-    if (!token) {
+-      const captchaResponse = await captchaRef.current?.execute({ async: true })
+-      token = captchaResponse?.response ?? null
++    try {
++      if (!token) {
++        const captchaResponse = await captchaRef.current?.execute({ async: true })
++        token = captchaResponse?.response ?? null
++      }
++    } catch (e) {
++      console.warn('Failed to execute captcha, continuing without captcha', e);
++      token = null
+     }
+ 
+     resetPassword({
+       email,
+       hcaptchaToken: token,
+-      redirectTo: `${
+-        process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview'
+-          ? location.origin
+-          : process.env.NEXT_PUBLIC_SITE_URL
+-      }${BASE_PATH}/reset-password`,
++      redirectTo: `${process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview'
++        ? location.origin
++        : process.env.NEXT_PUBLIC_SITE_URL
++        }${BASE_PATH}/reset-password`,
+     })
+   }
+ 
+diff --git a/apps/studio/components/interfaces/SignIn/SignInForm.tsx b/apps/studio/components/interfaces/SignIn/SignInForm.tsx
+index f0d5bf5..aaec44e 100644
+--- a/apps/studio/components/interfaces/SignIn/SignInForm.tsx
++++ b/apps/studio/components/interfaces/SignIn/SignInForm.tsx
+@@ -27,9 +27,14 @@ const SignInForm = () => {
+     const toastId = toast.loading('Signing in...')
+ 
+     let token = captchaToken
+-    if (!token) {
+-      const captchaResponse = await captchaRef.current?.execute({ async: true })
+-      token = captchaResponse?.response ?? null
++    try {
++      if (!token) {
++        const captchaResponse = await captchaRef.current?.execute({ async: true })
++        token = captchaResponse?.response ?? null
++      }
++    } catch (e) {
++      console.warn('Failed to execute captcha, continuing without captcha', e);
++      token = null
+     }
+ 
+     const { error } = await auth.signInWithPassword({
+@@ -59,8 +64,12 @@ const SignInForm = () => {
+         toast.error((error as AuthError).message, { id: toastId })
+       }
+     } else {
+-      setCaptchaToken(null)
+-      captchaRef.current?.resetCaptcha()
++      try {
++        setCaptchaToken(null)
++        captchaRef.current?.resetCaptcha()
++      } catch (e) {
++        console.warn('Failed to reset captcha', e);
++      }
+ 
+       if (error.message.toLowerCase() === 'email not confirmed') {
+         return toast.error(
+diff --git a/apps/studio/components/interfaces/SignIn/SignInSSOForm.tsx b/apps/studio/components/interfaces/SignIn/SignInSSOForm.tsx
+index 6708879..137c74b 100644
+--- a/apps/studio/components/interfaces/SignIn/SignInSSOForm.tsx
++++ b/apps/studio/components/interfaces/SignIn/SignInSSOForm.tsx
+@@ -22,17 +22,21 @@ const SignInSSOForm = () => {
+     const toastId = toast.loading('Signing in...')
+ 
+     let token = captchaToken
+-    if (!token) {
+-      const captchaResponse = await captchaRef.current?.execute({ async: true })
+-      token = captchaResponse?.response ?? null
++    try {
++      if (!token) {
++        const captchaResponse = await captchaRef.current?.execute({ async: true })
++        token = captchaResponse?.response ?? null
++      }
++    } catch (e) {
++      console.warn('Failed to execute captcha, continuing without captcha', e);
++      token = null
+     }
+ 
+     // redirects to /sign-in to check if the user has MFA setup (handled in SignInLayout.tsx)
+     const redirectTo = buildPathWithParams(
+-      `${
+-        process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview'
+-          ? location.origin
+-          : process.env.NEXT_PUBLIC_SITE_URL
++      `${process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview'
++        ? location.origin
++        : process.env.NEXT_PUBLIC_SITE_URL
+       }${BASE_PATH}/sign-in-mfa`
+     )
+ 
+@@ -52,8 +56,12 @@ const SignInSSOForm = () => {
+         window.location.href = data.url
+       }
+     } else {
+-      setCaptchaToken(null)
+-      captchaRef.current?.resetCaptcha()
++      try {
++        setCaptchaToken(null)
++        captchaRef.current?.resetCaptcha()
++      } catch (e) {
++        console.warn('Failed to reset captcha', e);
++      }
+       toast.error(error.message, { id: toastId })
+     }
+   }
+diff --git a/apps/studio/components/interfaces/SignIn/SignUpForm.tsx b/apps/studio/components/interfaces/SignIn/SignUpForm.tsx
+index 10856dd..90ceeb2 100644
+--- a/apps/studio/components/interfaces/SignIn/SignUpForm.tsx
++++ b/apps/studio/components/interfaces/SignIn/SignUpForm.tsx
+@@ -26,37 +26,44 @@ const SignUpForm = () => {
+       setIsSubmitted(true)
+     },
+     onError: (error) => {
+-      setCaptchaToken(null)
+-      captchaRef.current?.resetCaptcha()
++      try {
++        setCaptchaToken(null)
++        captchaRef.current?.resetCaptcha()
++      } catch (e) {
++        console.warn('Failed to reset captcha', e);
++      }
+       toast.error(`Failed to sign up: ${error.message}`)
+     },
+   })
+ 
+   const onSignUp = async ({ email, password }: { email: string; password: string }) => {
+     let token = captchaToken
+-    if (!token) {
+-      const captchaResponse = await captchaRef.current?.execute({ async: true })
+-      token = captchaResponse?.response ?? null
++    try {
++      if (!token) {
++        const captchaResponse = await captchaRef.current?.execute({ async: true })
++        token = captchaResponse?.response ?? null
++      }
++    } catch (e) {
++      console.warn('Failed to execute captcha, continuing without captcha', e);
++      token = null
+     }
+ 
+     signup({
+       email,
+       password,
+       hcaptchaToken: token ?? null,
+-      redirectTo: `${
+-        process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview'
+-          ? location.origin
+-          : process.env.NEXT_PUBLIC_SITE_URL
+-      }${BASE_PATH}/sign-in`,
++      redirectTo: `${process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview'
++        ? location.origin
++        : process.env.NEXT_PUBLIC_SITE_URL
++        }${BASE_PATH}/sign-in`,
+     })
+   }
+ 
+   return (
+     <div className="relative">
+       <div
+-        className={`absolute top-0 duration-500 delay-300 w-full ${
+-          isSubmitted ? 'opacity-100' : 'opacity-0'
+-        }`}
++        className={`absolute top-0 duration-500 delay-300 w-full ${isSubmitted ? 'opacity-100' : 'opacity-0'
++          }`}
+       >
+         <Alert className="w-full" withIcon variant="success" title="Check your email to confirm">
+           You've successfully signed up. Please check your email to confirm your account before
+@@ -66,9 +73,8 @@ const SignUpForm = () => {
+       <Form
+         validateOnBlur
+         id="signUp-form"
+-        className={`w-full py-1 transition-all overflow-y-hidden duration-500 ${
+-          isSubmitted ? 'max-h-[100px] opacity-0 pointer-events-none' : 'max-h-[1000px] opacity-100'
+-        }`}
++        className={`w-full py-1 transition-all overflow-y-hidden duration-500 ${isSubmitted ? 'max-h-[100px] opacity-0 pointer-events-none' : 'max-h-[1000px] opacity-100'
++          }`}
+         initialValues={{ email: '', password: '' }}
+         validationSchema={signUpSchema}
+         onSubmit={onSignUp}
+@@ -106,9 +112,8 @@ const SignUpForm = () => {
+               />
+ 
+               <div
+-                className={`${
+-                  showConditions ? 'max-h-[500px]' : 'max-h-[0px]'
+-                } transition-all duration-400 overflow-y-hidden`}
++                className={`${showConditions ? 'max-h-[500px]' : 'max-h-[0px]'
++                  } transition-all duration-400 overflow-y-hidden`}
+               >
+                 <PasswordConditionsHelper password={values.password} />
+               </div>

@@ -7,9 +7,10 @@ import (
 )
 
 type Config struct {
-	DatabaseUrl   string `json:"database_url" split_words:"true" required:"true"`
-	Port          int    `json:"port" default:"8080"`
-	DisableSignup bool   `json:"disable_signup" split_words:"true" default:"true"`
+	DatabaseUrl string `json:"database_url" split_words:"true" required:"true"`
+	Port        int    `json:"port" default:"8080"`
+	JwtSecret   string `json:"jwt_secret" split_words:"true" required:"true"`
+	AllowSignup bool   `json:"allow_signup" split_words:"true" default:"false"`
 }
 
 func LoadConfig(filename string) (*Config, error) {

@@ -9,7 +9,8 @@ import (
 )
 
 type Account struct {
-	ID           pgtype.UUID
+	ID           int32
+	GotrueID     string
 	Email        string
 	PasswordHash string
 	Username     string
@@ -26,6 +27,7 @@ type Migration struct {
 }
 
 type Organization struct {
+	ID           int32
 	Slug         string
 	Name         string
 	Kind         string
@@ -35,21 +37,22 @@ type Organization struct {
 }
 
 type OrganizationMembership struct {
-	OrganizationSlug string
-	AccountID        pgtype.UUID
-	Role             string
-	CreatedAt        pgtype.Timestamptz
-	UpdatedAt        pgtype.Timestamptz
+	OrganizationID int32
+	AccountID      int32
+	Role           string
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
 }
 
 type Project struct {
-	ProjectRef       string
-	ProjectName      string
-	OrganizationSlug string
-	Status           string
-	CloudProvider    string
-	Region           string
-	JwtSecret        string
-	CreatedAt        pgtype.Timestamptz
-	UpdatedAt        pgtype.Timestamptz
+	ID             int32
+	ProjectRef     string
+	ProjectName    string
+	OrganizationID int32
+	Status         string
+	CloudProvider  string
+	Region         string
+	JwtSecret      string
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
 }

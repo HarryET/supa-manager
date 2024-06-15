@@ -7,16 +7,19 @@ package database
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const getOrganizationById = `-- name: GetOrganizationById :one
-SELECT slug, name, kind, billing_email, created_at, updated_at FROM public.organizations WHERE slug = $1
+SELECT id, slug, name, kind, billing_email, created_at, updated_at FROM public.organizations WHERE slug = $1
 `
 
 func (q *Queries) GetOrganizationById(ctx context.Context, id string) (Organization, error) {
 	row := q.db.QueryRow(ctx, getOrganizationById, id)
 	var i Organization
 	err := row.Scan(
+		&i.ID,
 		&i.Slug,
 		&i.Name,
 		&i.Kind,
@@ -25,4 +28,51 @@ func (q *Queries) GetOrganizationById(ctx context.Context, id string) (Organizat
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const getOrganizationsForAccountId = `-- name: GetOrganizationsForAccountId :many
+SELECT o.id, o.slug, o.name, o.kind, o.billing_email, o.created_at, o.updated_at, om.role as member_role
+FROM organization_membership om
+         JOIN organizations o on o.id = om.organization_id
+WHERE account_id = $1
+`
+
+type GetOrganizationsForAccountIdRow struct {
+	ID           int32
+	Slug         string
+	Name         string
+	Kind         string
+	BillingEmail string
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
+	MemberRole   string
+}
+
+func (q *Queries) GetOrganizationsForAccountId(ctx context.Context, accountID int32) ([]GetOrganizationsForAccountIdRow, error) {
+	rows, err := q.db.Query(ctx, getOrganizationsForAccountId, accountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetOrganizationsForAccountIdRow
+	for rows.Next() {
+		var i GetOrganizationsForAccountIdRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Slug,
+			&i.Name,
+			&i.Kind,
+			&i.BillingEmail,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.MemberRole,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

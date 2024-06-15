@@ -11,9 +11,10 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createAccount = `-- name: CreateAccount :exec
+const createAccount = `-- name: CreateAccount :one
 INSERT INTO public.accounts (email, password_hash, username)
 VALUES ($1, $2, $3)
+RETURNING id, gotrue_id, email, password_hash, username, first_name, last_name, created_at, updated_at
 `
 
 type CreateAccountParams struct {
@@ -22,9 +23,84 @@ type CreateAccountParams struct {
 	Username     string
 }
 
-func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) error {
-	_, err := q.db.Exec(ctx, createAccount, arg.Email, arg.PasswordHash, arg.Username)
-	return err
+func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error) {
+	row := q.db.QueryRow(ctx, createAccount, arg.Email, arg.PasswordHash, arg.Username)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.GotrueID,
+		&i.Email,
+		&i.PasswordHash,
+		&i.Username,
+		&i.FirstName,
+		&i.LastName,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getAccountByEmail = `-- name: GetAccountByEmail :one
+SELECT id, gotrue_id, email, password_hash, username, first_name, last_name, created_at, updated_at FROM public.accounts WHERE email = $1
+`
+
+func (q *Queries) GetAccountByEmail(ctx context.Context, email string) (Account, error) {
+	row := q.db.QueryRow(ctx, getAccountByEmail, email)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.GotrueID,
+		&i.Email,
+		&i.PasswordHash,
+		&i.Username,
+		&i.FirstName,
+		&i.LastName,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getAccountByGoTrueID = `-- name: GetAccountByGoTrueID :one
+SELECT id, gotrue_id, email, password_hash, username, first_name, last_name, created_at, updated_at FROM public.accounts WHERE gotrue_id = $1
+`
+
+func (q *Queries) GetAccountByGoTrueID(ctx context.Context, gotrueID string) (Account, error) {
+	row := q.db.QueryRow(ctx, getAccountByGoTrueID, gotrueID)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.GotrueID,
+		&i.Email,
+		&i.PasswordHash,
+		&i.Username,
+		&i.FirstName,
+		&i.LastName,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getAccountByID = `-- name: GetAccountByID :one
+SELECT id, gotrue_id, email, password_hash, username, first_name, last_name, created_at, updated_at FROM public.accounts WHERE id = $1
+`
+
+func (q *Queries) GetAccountByID(ctx context.Context, id int32) (Account, error) {
+	row := q.db.QueryRow(ctx, getAccountByID, id)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.GotrueID,
+		&i.Email,
+		&i.PasswordHash,
+		&i.Username,
+		&i.FirstName,
+		&i.LastName,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const setAccountName = `-- name: SetAccountName :exec
@@ -35,7 +111,7 @@ WHERE id = $1
 `
 
 type SetAccountNameParams struct {
-	ID        pgtype.UUID
+	ID        int32
 	FirstName pgtype.Text
 	LastName  pgtype.Text
 }

@@ -1,0 +1,20 @@
+diff --git a/apps/studio/lib/configcat.ts b/apps/studio/lib/configcat.ts
+index 048e0bd..a229b13 100644
+--- a/apps/studio/lib/configcat.ts
++++ b/apps/studio/lib/configcat.ts
+@@ -8,11 +8,10 @@ function getClient() {
+     return client
+   }
+ 
+-  client = configcat.getClient(
+-    process.env.NEXT_PUBLIC_CONFIGCAT_SDK_KEY ?? '',
+-    configcat.PollingMode.AutoPoll,
+-    { pollIntervalSeconds: 600 }
+-  )
++  client = configcat.getClient('CONFIG-CAT-KEY', configcat.PollingMode.AutoPoll, {
++    pollIntervalSeconds: 600,
++    baseUrl: process.env.NEXT_PUBLIC_API_URL + '/configcat',
++  })
+ 
+   return client
+ }

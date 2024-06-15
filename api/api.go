@@ -2,12 +2,15 @@ package api
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/harryet/supa-manager/conf"
 	"github.com/harryet/supa-manager/database"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/matthewhartstonge/argon2"
 	"log/slog"
 	"net/http"
 	"time"
@@ -18,16 +21,16 @@ type Api struct {
 	logger    *slog.Logger
 	config    *conf.Config
 	queries   *database.Queries
-	pg        *pgx.Conn
+	pgPool    *pgxpool.Pool
+	argon     argon2.Config
 }
 
 func CreateApi(logger *slog.Logger, config *conf.Config) (*Api, error) {
-	conn, err := pgx.Connect(context.Background(), config.DatabaseUrl)
+	conn, err := pgxpool.New(context.Background(), config.DatabaseUrl)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Unable to connect to database: %v", err))
 		return nil, err
 	}
-	defer conn.Close(context.Background())
 
 	if err := conf.EnsureMigrationsTableExists(conn); err != nil {
 		logger.Error(fmt.Sprintf("Failed to ensure migrations table: %v", err))
@@ -45,8 +48,49 @@ func CreateApi(logger *slog.Logger, config *conf.Config) (*Api, error) {
 		logger:  logger,
 		config:  config,
 		queries: queries,
-		pg:      conn,
+		pgPool:  conn,
+		argon:   argon2.DefaultConfig(),
 	}, nil
+}
+
+func (a *Api) GetAccountIdFromRequest(c *gin.Context) (string, error) {
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		return "", errors.New("missing Authorization header")
+	}
+
+	tokenString := authHeader[len("Bearer "):]
+	token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(a.config.JwtSecret), nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	claims, ok := token.Claims.(*jwt.RegisteredClaims)
+	if !ok {
+		return "", errors.New("invalid token claims")
+	}
+
+	return claims.Subject, nil
+}
+
+func (a *Api) GetAccountFromRequest(c *gin.Context) (*database.Account, error) {
+	id, err := a.GetAccountIdFromRequest(c)
+	if err != nil {
+		return nil, err
+	}
+
+	if id == "" {
+		return nil, errors.New("missing account ID")
+	}
+
+	account, err := a.queries.GetAccountByGoTrueID(c.Request.Context(), id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &account, nil
 }
 
 func (a *Api) ListenAddress() string {
@@ -61,15 +105,8 @@ func (a *Api) status(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"is_healthy": a.isHealthy})
 }
 
-func (a *Api) gotrueAuthorize(c *gin.Context) {
-	// TODO: Implement OAuth Support Optionally
-	// Currently we get the referer and redirect back to it without doing any auth
-	referer := c.GetHeader("Referer")
-	c.Redirect(http.StatusFound, referer)
-}
-
-func (a *Api) gotrueToken(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"status": "OK"})
+func (a *Api) telemetry(c *gin.Context) {
+	c.AbortWithStatus(http.StatusNoContent)
 }
 
 func (a *Api) Router() *gin.Engine {
@@ -78,19 +115,36 @@ func (a *Api) Router() *gin.Engine {
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH"},
-		AllowHeaders:     []string{"Origin"},
-		ExposeHeaders:    []string{"Content-Length"},
+		AllowHeaders:     []string{"*"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
 
 	r.GET("/", a.index)
 	r.GET("/status", a.status)
+	r.GET("/telemetry/:event", a.telemetry)
 
-	gotrue := r.Group("/auth/v1")
+	r.GET("/organizations", a.getOrganizations)
+	r.GET("/profile", a.profile)
+	r.GET("/profile/permissions", a.profilePermissions)
+
+	gotrue := r.Group("/auth")
 	{
-		gotrue.POST("/authorize", a.gotrueAuthorize)
 		gotrue.POST("/token", a.gotrueToken)
+	}
+
+	platform := r.Group("/platform")
+	{
+		platform.POST("/signup", a.platformSignup)
+		platform.GET("/notifications", a.platformNotifications)
+		platform.GET("/stripe/invoices/overdue", a.platformOverdueInvoices)
+		platform.POST("/stripe/setup-intent", a.platformSetupIntent)
+		platform.GET("/projects", a.platformProjects)
+	}
+
+	configcat := r.Group("/configcat")
+	{
+		configcat.GET("/configuration-files/:key/config_v5.json", a.getConfigCatConfiguration)
 	}
 
 	return r

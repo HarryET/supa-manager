@@ -1,0 +1,39 @@
+diff --git a/apps/studio/lib/telemetry.ts b/apps/studio/lib/telemetry.ts
+index 9afbdca..1726911 100644
+--- a/apps/studio/lib/telemetry.ts
++++ b/apps/studio/lib/telemetry.ts
+@@ -34,19 +34,21 @@ const sendEvent = (
+   // such as access/refresh tokens
+   const page_location = router.asPath.split('#')[0]
+ 
+-  return post(`${API_URL}/telemetry/event`, {
+-    action: action,
+-    category: category,
+-    label: label,
+-    value: value,
+-    page_referrer: document?.referrer,
+-    page_title: document?.title,
+-    page_location,
+-    ga: {
+-      screen_resolution: gaProps?.screenResolution,
+-      language: gaProps?.language,
+-    },
+-  })
++  // Note: Disabled telemetry as there is a LARGE ammount and it causes unnecessary load on the server since we don't use it in supa-manager
++  // return post(`${API_URL}/telemetry/event`, {
++  //   action: action,
++  //   category: category,
++  //   label: label,
++  //   value: value,
++  //   page_referrer: document?.referrer,
++  //   page_title: document?.title,
++  //   page_location,
++  //   ga: {
++  //     screen_resolution: gaProps?.screenResolution,
++  //     language: gaProps?.language,
++  //   },
++  // })
++  return
+ }
+ 
+ /**

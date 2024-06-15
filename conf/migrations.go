@@ -6,11 +6,12 @@ import (
 	"github.com/harryet/supa-manager/database"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"os"
 	"strings"
 )
 
-func EnsureMigrationsTableExists(conn *pgx.Conn) error {
+func EnsureMigrationsTableExists(conn *pgxpool.Pool) error {
 	// Check if the table exists
 	query := `
 		SELECT EXISTS (
@@ -42,7 +43,7 @@ func EnsureMigrationsTableExists(conn *pgx.Conn) error {
 	return nil
 }
 
-func EnsureMigrations(sql *pgx.Conn, conn *database.Queries) (bool, error) {
+func EnsureMigrations(pool *pgxpool.Pool, conn *database.Queries) (bool, error) {
 	migrations, err := conn.GetMigrations(context.Background())
 	if err != nil {
 		return false, err
@@ -73,7 +74,7 @@ func EnsureMigrations(sql *pgx.Conn, conn *database.Queries) (bool, error) {
 		}
 
 		if !applied {
-			tx, err := sql.BeginTx(context.Background(), pgx.TxOptions{})
+			tx, err := pool.BeginTx(context.Background(), pgx.TxOptions{})
 			if err != nil {
 				return false, err
 			}

@@ -1,0 +1,22 @@
+diff --git a/apps/studio/pages/org/[slug]/billing.tsx b/apps/studio/pages/org/[slug]/billing.tsx
+index e69de29..3b9f575 100644
+--- a/apps/studio/pages/org/[slug]/billing.tsx
++++ b/apps/studio/pages/org/[slug]/billing.tsx
+@@ -0,0 +1,17 @@
++import { useEffect } from 'react'
++import { NextPageWithLayout } from 'types'
++import { OrganizationLayout } from 'components/layouts'
++import { useRouter } from 'next/router'
++
++const OrgBillingSettings: NextPageWithLayout = () => {
++  const router = useRouter()
++
++  useEffect(() => {
++    router.back()
++  }, [router])
++
++  return <div></div>
++}
++
++OrgBillingSettings.getLayout = (page) => <OrganizationLayout>{page}</OrganizationLayout>
++export default OrgBillingSettings
