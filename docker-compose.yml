@@ -1,0 +1,20 @@
+version: "3"
+services:
+  database:
+    image: supabase/postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: supabase
+  studio:
+    image: supa-manager/studio:v1.24.04
+    ports:
+      - "3000:3000"
+    environment:
+      PLATFORM_PG_META_URL: http://localhost:8080/pg
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      NEXT_PUBLIC_GOTRUE_URL: http://localhost:8080/auth
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+      NEXT_PUBLIC_API_ADMIN_URL: http://localhost:8080

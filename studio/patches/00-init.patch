@@ -1,0 +1,2467 @@
+diff --git a/apps/studio/components/interfaces/App/RouteValidationWrapper.tsx b/apps/studio/components/interfaces/App/RouteValidationWrapper.tsx
+index c8b4f76..82dd9c5 100644
+--- a/apps/studio/components/interfaces/App/RouteValidationWrapper.tsx
++++ b/apps/studio/components/interfaces/App/RouteValidationWrapper.tsx
+@@ -6,7 +6,7 @@ import { useIsLoggedIn, useParams } from 'common'
+ import { useOrganizationsQuery } from 'data/organizations/organizations-query'
+ import { useProjectsQuery } from 'data/projects/projects-query'
+ import { useFlag, useLatest } from 'hooks'
+-import { DEFAULT_HOME, IS_PLATFORM, LOCAL_STORAGE_KEYS } from 'lib/constants'
++import { DEFAULT_HOME, LOCAL_STORAGE_KEYS } from 'lib/constants'
+ import { useAppStateSnapshot } from 'state/app-state'
+ 
+ // Ideally these could all be within a _middleware when we use Next 12
+@@ -74,9 +74,7 @@ const RouteValidationWrapper = ({ children }: PropsWithChildren<{}>) => {
+       // Check validity of project that the user is trying to access
+       const projects = projectsRef.current ?? []
+       const isValidProject = projects.some((project) => project.ref === ref)
+-      const isValidBranch = IS_PLATFORM
+-        ? projects.some((project) => project.preview_branch_refs.includes(ref))
+-        : true
++      const isValidBranch = projects.some((project) => project.preview_branch_refs.includes(ref))
+ 
+       if (!isValidProject && !isValidBranch) {
+         toast.error('This project does not exist')
+diff --git a/apps/studio/components/interfaces/Auth/AdvancedAuthSettingsForm/AdvancedAuthSettingsForm.tsx b/apps/studio/components/interfaces/Auth/AdvancedAuthSettingsForm/AdvancedAuthSettingsForm.tsx
+index abea360..6042d9f 100644
+--- a/apps/studio/components/interfaces/Auth/AdvancedAuthSettingsForm/AdvancedAuthSettingsForm.tsx
++++ b/apps/studio/components/interfaces/Auth/AdvancedAuthSettingsForm/AdvancedAuthSettingsForm.tsx
+@@ -25,7 +25,6 @@ import { useAuthConfigQuery } from 'data/auth/auth-config-query'
+ import { useOrgSubscriptionQuery } from 'data/subscriptions/org-subscription-query'
+ import { useAuthConfigUpdateMutation } from 'data/auth/auth-config-update-mutation'
+ import { useCheckPermissions, useSelectedOrganization } from 'hooks'
+-import { IS_PLATFORM } from 'lib/constants'
+ import UpgradeToPro from 'components/ui/UpgradeToPro'
+ 
+ const schema = object({
+@@ -68,7 +67,7 @@ const AdvancedAuthSettingsForm = () => {
+ 
+   const isTeamsEnterprisePlan =
+     isSuccessSubscription && subscription.plan.id !== 'free' && subscription.plan.id !== 'pro'
+-  const promptTeamsEnterpriseUpgrade = IS_PLATFORM && !isTeamsEnterprisePlan
++  const promptTeamsEnterpriseUpgrade = !isTeamsEnterprisePlan
+ 
+   const INITIAL_VALUES = {
+     SITE_URL: authConfig?.SITE_URL,
+diff --git a/apps/studio/components/interfaces/Auth/BasicAuthSettingsForm/BasicAuthSettingsForm.tsx b/apps/studio/components/interfaces/Auth/BasicAuthSettingsForm/BasicAuthSettingsForm.tsx
+index f9a4456..7fb7826 100644
+--- a/apps/studio/components/interfaces/Auth/BasicAuthSettingsForm/BasicAuthSettingsForm.tsx
++++ b/apps/studio/components/interfaces/Auth/BasicAuthSettingsForm/BasicAuthSettingsForm.tsx
+@@ -30,7 +30,6 @@ import { useAuthConfigQuery } from 'data/auth/auth-config-query'
+ import { useAuthConfigUpdateMutation } from 'data/auth/auth-config-update-mutation'
+ import { useOrgSubscriptionQuery } from 'data/subscriptions/org-subscription-query'
+ import { useCheckPermissions, useSelectedOrganization } from 'hooks'
+-import { IS_PLATFORM } from 'lib/constants'
+ import Link from 'next/link'
+ import { WarningIcon } from 'ui-patterns/Icons/StatusIcons'
+ import FormField from '../AuthProvidersForm/FormField'
+@@ -98,11 +97,11 @@ const BasicAuthSettingsForm = () => {
+     {
+       orgSlug: organization?.slug,
+     },
+-    { enabled: IS_PLATFORM }
++    { enabled: true }
+   )
+ 
+   const isProPlanAndUp = isSuccessSubscription && subscription?.plan?.id !== 'free'
+-  const promptProPlanUpgrade = IS_PLATFORM && !isProPlanAndUp
++  const promptProPlanUpgrade = !isProPlanAndUp
+ 
+   const INITIAL_VALUES = {
+     DISABLE_SIGNUP: !authConfig?.DISABLE_SIGNUP,
+diff --git a/apps/studio/components/interfaces/Auth/Policies/AIPolicyEditorPanel/AIPolicyChat.tsx b/apps/studio/components/interfaces/Auth/Policies/AIPolicyEditorPanel/AIPolicyChat.tsx
+index 1ad3ded..c8eac62 100644
+--- a/apps/studio/components/interfaces/Auth/Policies/AIPolicyEditorPanel/AIPolicyChat.tsx
++++ b/apps/studio/components/interfaces/Auth/Policies/AIPolicyEditorPanel/AIPolicyChat.tsx
+@@ -19,7 +19,7 @@ import { AiIcon } from 'ui-patterns/Cmdk'
+ import * as z from 'zod'
+ 
+ import { useLocalStorageQuery, useSelectedOrganization } from 'hooks'
+-import { IS_PLATFORM, LOCAL_STORAGE_KEYS, OPT_IN_TAGS } from 'lib/constants'
++import { LOCAL_STORAGE_KEYS, OPT_IN_TAGS } from 'lib/constants'
+ import { useProfile } from 'lib/profile'
+ import { useAppStateSnapshot } from 'state/app-state'
+ import { MessageWithDebug } from './AIPolicyEditorPanel.utils'
+@@ -51,7 +51,7 @@ export const AIPolicyChat = ({
+ 
+   const isOptedInToAI = organization?.opt_in_tags?.includes(OPT_IN_TAGS.AI_SQL) ?? false
+   const [hasEnabledAISchema] = useLocalStorageQuery(LOCAL_STORAGE_KEYS.SQL_EDITOR_AI_SCHEMA, true)
+-  const includeSchemaMetadata = (isOptedInToAI || !IS_PLATFORM) && hasEnabledAISchema
++  const includeSchemaMetadata = isOptedInToAI && hasEnabledAISchema
+ 
+   const name = compact([profile?.first_name, profile?.last_name]).join(' ')
+ 
+diff --git a/apps/studio/components/interfaces/Auth/Users/AddUserDropdown.tsx b/apps/studio/components/interfaces/Auth/Users/AddUserDropdown.tsx
+index 1bf095f..5998dbe 100644
+--- a/apps/studio/components/interfaces/Auth/Users/AddUserDropdown.tsx
++++ b/apps/studio/components/interfaces/Auth/Users/AddUserDropdown.tsx
+@@ -14,7 +14,6 @@ import {
+ } from 'ui'
+ 
+ import { useCheckPermissions } from 'hooks'
+-import { IS_PLATFORM } from 'lib/constants'
+ import InviteUserModal from './InviteUserModal'
+ import CreateUserModal from './CreateUserModal'
+ 
+@@ -23,13 +22,11 @@ export type AddUserDropdownProps = {
+ }
+ 
+ const AddUserDropdown = ({ projectKpsVersion }: AddUserDropdownProps) => {
+-  const inviteEnabled = IS_PLATFORM
+-    ? semver.gte(
+-        // @ts-ignore
+-        semver.coerce(projectKpsVersion ?? 'kps-v2.5.4'),
+-        semver.coerce('kps-v2.5.3')
+-      )
+-    : true
++  const inviteEnabled = semver.gte(
++    // @ts-ignore
++    semver.coerce(projectKpsVersion ?? 'kps-v2.5.4'),
++    semver.coerce('kps-v2.5.3')
++  )
+ 
+   const canInviteUsers = useCheckPermissions(PermissionAction.AUTH_EXECUTE, 'invite_user')
+   const canCreateUsers = useCheckPermissions(PermissionAction.AUTH_EXECUTE, 'create_user')
+diff --git a/apps/studio/components/interfaces/Billing/Subscription/Subscription.utils.ts b/apps/studio/components/interfaces/Billing/Subscription/Subscription.utils.ts
+index af17a9e..c21278b 100644
+--- a/apps/studio/components/interfaces/Billing/Subscription/Subscription.utils.ts
++++ b/apps/studio/components/interfaces/Billing/Subscription/Subscription.utils.ts
+@@ -1,4 +1,3 @@
+-import { IS_PLATFORM } from 'lib/constants'
+ import type { OrgSubscription, ProjectSelectedAddon } from 'data/subscriptions/types'
+ 
+ export const getAddons = (selectedAddons: ProjectSelectedAddon[]) => {
+@@ -11,8 +10,6 @@ export const getAddons = (selectedAddons: ProjectSelectedAddon[]) => {
+ }
+ 
+ export const subscriptionHasHipaaAddon = (subscription?: OrgSubscription): boolean => {
+-  if (!IS_PLATFORM) return false
+-
+   return (subscription?.addons ?? []).some(
+     (addon) => addon.supabase_prod_id === 'addon_security_hipaa'
+   )
+diff --git a/apps/studio/components/interfaces/Database/Hooks/Hooks.constants.ts b/apps/studio/components/interfaces/Database/Hooks/Hooks.constants.ts
+index eef1382..44fe67a 100644
+--- a/apps/studio/components/interfaces/Database/Hooks/Hooks.constants.ts
++++ b/apps/studio/components/interfaces/Database/Hooks/Hooks.constants.ts
+@@ -1,4 +1,4 @@
+-import { BASE_PATH, IS_PLATFORM } from 'lib/constants'
++import { BASE_PATH } from 'lib/constants'
+ 
+ export const HOOK_EVENTS = [
+   {
+@@ -25,14 +25,12 @@ export const AVAILABLE_WEBHOOK_TYPES = [
+     label: 'HTTP Request',
+     description: 'Send an HTTP request to any URL.',
+   },
+-  ...(IS_PLATFORM
+-    ? [
+-        {
+-          value: 'supabase_function',
+-          icon: `${BASE_PATH}/img/function-providers/supabase-severless-function.png`,
+-          label: 'Supabase Edge Functions',
+-          description: 'Choose a Supabase edge function to run.',
+-        },
+-      ]
+-    : []),
++  ...[
++    {
++      value: 'supabase_function',
++      icon: `${BASE_PATH}/img/function-providers/supabase-severless-function.png`,
++      label: 'Supabase Edge Functions',
++      description: 'Choose a Supabase edge function to run.',
++    },
++  ],
+ ]
+diff --git a/apps/studio/components/interfaces/Home/ProjectList/ProjectList.tsx b/apps/studio/components/interfaces/Home/ProjectList/ProjectList.tsx
+index 1c4d454..42810a2 100644
+--- a/apps/studio/components/interfaces/Home/ProjectList/ProjectList.tsx
++++ b/apps/studio/components/interfaces/Home/ProjectList/ProjectList.tsx
+@@ -14,7 +14,6 @@ import { usePermissionsQuery } from 'data/permissions/permissions-query'
+ import { ProjectInfo, useProjectsQuery } from 'data/projects/projects-query'
+ import { ResourceWarning, useResourceWarningsQuery } from 'data/usage/resource-warnings-query'
+ import { useIsFeatureEnabled } from 'hooks'
+-import { IS_PLATFORM } from 'lib/constants'
+ import { makeRandomString } from 'lib/helpers'
+ import type { Organization, ResponseError } from 'types'
+ import { Button, IconPlus } from 'ui'
+@@ -40,9 +39,9 @@ const ProjectList = ({ search, rewriteHref }: ProjectListProps) => {
+     error: permissionsError,
+   } = usePermissionsQuery()
+   const { data: resourceWarnings } = useResourceWarningsQuery()
+-  const { data: allOverdueInvoices } = useOverdueInvoicesQuery({ enabled: IS_PLATFORM })
++  const { data: allOverdueInvoices } = useOverdueInvoicesQuery({ enabled: true })
+   const projectsByOrg = groupBy(allProjects, 'organization_id')
+-  const isLoadingPermissions = IS_PLATFORM ? _isLoadingPermissions : false
++  const isLoadingPermissions = _isLoadingPermissions
+   const noResults =
+     search.length > 0 &&
+     allProjects !== undefined &&
+diff --git a/apps/studio/components/interfaces/HomePageActions.tsx b/apps/studio/components/interfaces/HomePageActions.tsx
+index dae381e..332b77a 100644
+--- a/apps/studio/components/interfaces/HomePageActions.tsx
++++ b/apps/studio/components/interfaces/HomePageActions.tsx
+@@ -1,4 +1,3 @@
+-import { IS_PLATFORM } from 'common'
+ import Link from 'next/link'
+ import { useRouter } from 'next/router'
+ import {
+@@ -54,7 +53,7 @@ const HomePageActions = ({
+         </DropdownMenuContent>
+       </DropdownMenu>
+ 
+-      {IS_PLATFORM && organizationCreationEnabled && orgsLoaded && (
++      {organizationCreationEnabled && orgsLoaded && (
+         <Button type="default" asChild>
+           <Link href="/new" className="flex items-center gap-2">
+             New organization
+diff --git a/apps/studio/components/interfaces/Realtime/Inspector/RealtimeTokensPopover/index.tsx b/apps/studio/components/interfaces/Realtime/Inspector/RealtimeTokensPopover/index.tsx
+index d874a9c..0fd42e6 100644
+--- a/apps/studio/components/interfaces/Realtime/Inspector/RealtimeTokensPopover/index.tsx
++++ b/apps/studio/components/interfaces/Realtime/Inspector/RealtimeTokensPopover/index.tsx
+@@ -6,7 +6,6 @@ import toast from 'react-hot-toast'
+ import { RoleImpersonationPopover } from 'components/interfaces/RoleImpersonationSelector'
+ import { useProjectApiQuery } from 'data/config/project-api-query'
+ import { useProjectPostgrestConfigQuery } from 'data/config/project-postgrest-config-query'
+-import { IS_PLATFORM } from 'lib/constants'
+ import { getRoleImpersonationJWT } from 'lib/role-impersonation'
+ import Telemetry from 'lib/telemetry'
+ import { useRoleImpersonationStateSnapshot } from 'state/role-impersonation-state'
+@@ -34,7 +33,7 @@ export const RealtimeTokensPopover = ({ config, onChangeConfig }: RealtimeTokens
+     {
+       projectRef: config.projectRef,
+     },
+-    { enabled: IS_PLATFORM }
++    { enabled: true }
+   )
+   const jwtSecret = postgrestConfig?.jwt_secret
+ 
+diff --git a/apps/studio/components/interfaces/SQLEditor/AISchemaSuggestionPopover.tsx b/apps/studio/components/interfaces/SQLEditor/AISchemaSuggestionPopover.tsx
+index 4e9f3a6..7b1ce95 100644
+--- a/apps/studio/components/interfaces/SQLEditor/AISchemaSuggestionPopover.tsx
++++ b/apps/studio/components/interfaces/SQLEditor/AISchemaSuggestionPopover.tsx
+@@ -1,7 +1,7 @@
+ import * as Popover from '@radix-ui/react-popover'
+ import { motion } from 'framer-motion'
+ import { useLocalStorageQuery, useSelectedOrganization } from 'hooks'
+-import { IS_PLATFORM, OPT_IN_TAGS } from 'lib/constants'
++import { OPT_IN_TAGS } from 'lib/constants'
+ import { PropsWithChildren, useEffect, useState } from 'react'
+ import { Button, IconInfo } from 'ui'
+ 
+@@ -21,7 +21,7 @@ const AISchemaSuggestionPopover = ({
+   const [isDelayComplete, setIsDelayComplete] = useState(false)
+   const [aiQueryCount] = useLocalStorageQuery('supabase_sql-editor-ai-query-count', 0)
+ 
+-  const includeSchemaMetadata = (isOptedInToAI || !IS_PLATFORM) && hasEnabledAISchema
++  const includeSchemaMetadata = isOptedInToAI && hasEnabledAISchema
+ 
+   const [isSchemaSuggestionDismissed, setIsSchemaSuggestionDismissed] = useLocalStorageQuery(
+     'supabase_sql-editor-ai-schema-suggestion-dismissed',
+diff --git a/apps/studio/components/interfaces/SQLEditor/AiAssistantPanel/index.tsx b/apps/studio/components/interfaces/SQLEditor/AiAssistantPanel/index.tsx
+index 2d80336..f5b6264 100644
+--- a/apps/studio/components/interfaces/SQLEditor/AiAssistantPanel/index.tsx
++++ b/apps/studio/components/interfaces/SQLEditor/AiAssistantPanel/index.tsx
+@@ -20,7 +20,7 @@ import { AiIcon } from 'ui-patterns/Cmdk'
+ import * as z from 'zod'
+ 
+ import { useLocalStorageQuery, useSelectedOrganization } from 'hooks'
+-import { IS_PLATFORM, LOCAL_STORAGE_KEYS, OPT_IN_TAGS } from 'lib/constants'
++import { LOCAL_STORAGE_KEYS, OPT_IN_TAGS } from 'lib/constants'
+ import { useProfile } from 'lib/profile'
+ import { useAppStateSnapshot } from 'state/app-state'
+ import { DiffType } from '../SQLEditor.types'
+@@ -56,7 +56,7 @@ export const AiAssistantPanel = ({
+ 
+   const isOptedInToAI = organization?.opt_in_tags?.includes(OPT_IN_TAGS.AI_SQL) ?? false
+   const [hasEnabledAISchema] = useLocalStorageQuery(LOCAL_STORAGE_KEYS.SQL_EDITOR_AI_SCHEMA, true)
+-  const includeSchemaMetadata = (isOptedInToAI || !IS_PLATFORM) && hasEnabledAISchema
++  const includeSchemaMetadata = isOptedInToAI && hasEnabledAISchema
+ 
+   const name = compact([profile?.first_name, profile?.last_name]).join(' ')
+ 
+diff --git a/apps/studio/components/interfaces/SQLEditor/SQLEditor.tsx b/apps/studio/components/interfaces/SQLEditor/SQLEditor.tsx
+index eaea903..c5bf42b 100644
+--- a/apps/studio/components/interfaces/SQLEditor/SQLEditor.tsx
++++ b/apps/studio/components/interfaces/SQLEditor/SQLEditor.tsx
+@@ -19,7 +19,7 @@ import { useFormatQueryMutation } from 'data/sql/format-sql-query'
+ import { useOrgSubscriptionQuery } from 'data/subscriptions/org-subscription-query'
+ import { isError } from 'data/utils/error-check'
+ import { useFlag, useLocalStorageQuery, useSelectedOrganization, useSelectedProject } from 'hooks'
+-import { BASE_PATH, IS_PLATFORM, LOCAL_STORAGE_KEYS, OPT_IN_TAGS } from 'lib/constants'
++import { BASE_PATH, LOCAL_STORAGE_KEYS, OPT_IN_TAGS } from 'lib/constants'
+ import { uuidv4 } from 'lib/helpers'
+ import { useProfile } from 'lib/profile'
+ import { wrapWithRoleImpersonation } from 'lib/role-impersonation'
+@@ -142,7 +142,7 @@ const SQLEditor = () => {
+     false
+   )
+ 
+-  const includeSchemaMetadata = (isOptedInToAI || !IS_PLATFORM) && hasEnabledAISchema
++  const includeSchemaMetadata = isOptedInToAI && hasEnabledAISchema
+ 
+   const [selectedDiffType, setSelectedDiffType] = useState<DiffType | undefined>(undefined)
+   const [isFirstRender, setIsFirstRender] = useState(true)
+@@ -340,7 +340,7 @@ const SQLEditor = () => {
+           ? project.connectionString
+           : databases?.find((db) => db.identifier === databaseSelectorState.selectedDatabaseId)
+               ?.connectionString
+-        if (IS_PLATFORM && !connectionString) {
++        if (!connectionString) {
+           return toast.error('Unable to run query: Connection string is missing')
+         }
+ 
+diff --git a/apps/studio/components/interfaces/SQLEditor/UtilityPanel/UtilityActions.tsx b/apps/studio/components/interfaces/SQLEditor/UtilityPanel/UtilityActions.tsx
+index 3ea37fd..6047b85 100644
+--- a/apps/studio/components/interfaces/SQLEditor/UtilityPanel/UtilityActions.tsx
++++ b/apps/studio/components/interfaces/SQLEditor/UtilityPanel/UtilityActions.tsx
+@@ -4,7 +4,7 @@ import toast from 'react-hot-toast'
+ import { RoleImpersonationPopover } from 'components/interfaces/RoleImpersonationSelector'
+ import DatabaseSelector from 'components/ui/DatabaseSelector'
+ import { useLocalStorageQuery, useSelectedProject } from 'hooks'
+-import { IS_PLATFORM, LOCAL_STORAGE_KEYS } from 'lib/constants'
++import { LOCAL_STORAGE_KEYS } from 'lib/constants'
+ import { detectOS } from 'lib/helpers'
+ import { useSqlEditorStateSnapshot } from 'state/sql-editor'
+ import {
+@@ -54,7 +54,7 @@ const UtilityActions = ({
+ 
+   return (
+     <div className="inline-flex items-center justify-end gap-x-2">
+-      {IS_PLATFORM && <SavingIndicator id={id} />}
++      {<SavingIndicator id={id} />}
+ 
+       <DropdownMenu>
+         <DropdownMenuTrigger asChild>
+@@ -80,7 +80,7 @@ const UtilityActions = ({
+         </DropdownMenuContent>
+       </DropdownMenu>
+ 
+-      {IS_PLATFORM && <FavoriteButton id={id} />}
++      {<FavoriteButton id={id} />}
+ 
+       <Tooltip_Shadcn_>
+         <TooltipTrigger_Shadcn_ asChild>
+diff --git a/apps/studio/components/interfaces/SQLEditor/UtilityPanel/UtilityTabResults.tsx b/apps/studio/components/interfaces/SQLEditor/UtilityPanel/UtilityTabResults.tsx
+index 60925f0..8e2607a 100644
+--- a/apps/studio/components/interfaces/SQLEditor/UtilityPanel/UtilityTabResults.tsx
++++ b/apps/studio/components/interfaces/SQLEditor/UtilityPanel/UtilityTabResults.tsx
+@@ -9,7 +9,7 @@ import { useEntityDefinitionsQuery } from 'data/database/entity-definitions-quer
+ import { useOrgSubscriptionQuery } from 'data/subscriptions/org-subscription-query'
+ import { isError } from 'data/utils/error-check'
+ import { useLocalStorageQuery, useSelectedOrganization, useSelectedProject } from 'hooks'
+-import { IS_PLATFORM, LOCAL_STORAGE_KEYS, OPT_IN_TAGS } from 'lib/constants'
++import { LOCAL_STORAGE_KEYS, OPT_IN_TAGS } from 'lib/constants'
+ import { useDatabaseSelectorStateSnapshot } from 'state/database-selector'
+ import { useSqlEditorStateSnapshot } from 'state/sql-editor'
+ import { useSqlEditor } from '../SQLEditor'
+@@ -34,7 +34,7 @@ const UtilityTabResults = ({ id, isExecuting }: UtilityTabResultsProps) => {
+ 
+   const isOptedInToAI = organization?.opt_in_tags?.includes(OPT_IN_TAGS.AI_SQL) ?? false
+   const [hasEnabledAISchema] = useLocalStorageQuery(LOCAL_STORAGE_KEYS.SQL_EDITOR_AI_SCHEMA, true)
+-  const includeSchemaMetadata = (isOptedInToAI || !IS_PLATFORM) && hasEnabledAISchema
++  const includeSchemaMetadata = isOptedInToAI && hasEnabledAISchema
+ 
+   const { data } = useEntityDefinitionsQuery(
+     {
+diff --git a/apps/studio/components/interfaces/Settings/Logs/LogTable.tsx b/apps/studio/components/interfaces/Settings/Logs/LogTable.tsx
+index fb18b6d..df444a1 100644
+--- a/apps/studio/components/interfaces/Settings/Logs/LogTable.tsx
++++ b/apps/studio/components/interfaces/Settings/Logs/LogTable.tsx
+@@ -1,6 +1,5 @@
+ import * as Tooltip from '@radix-ui/react-tooltip'
+ import { PermissionAction } from '@supabase/shared-types/out/constants'
+-import { IS_PLATFORM } from 'common'
+ import { isEqual } from 'lodash'
+ import { Key, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+ import DataGrid, { Column, RenderRowProps, Row } from 'react-data-grid'
+@@ -249,7 +248,7 @@ const LogTable = ({
+       </div>
+ 
+       <div className="space-x-2">
+-        {IS_PLATFORM && (
++        {
+           <Tooltip.Root delayDuration={0}>
+             <Tooltip.Trigger asChild>
+               <Button
+@@ -278,7 +277,7 @@ const LogTable = ({
+               </Tooltip.Portal>
+             )}
+           </Tooltip.Root>
+-        )}
++        }
+         <Button
+           type={hasEditorValue ? 'primary' : 'alternative'}
+           disabled={!hasEditorValue}
+diff --git a/apps/studio/components/interfaces/Storage/CreateBucketModal.tsx b/apps/studio/components/interfaces/Storage/CreateBucketModal.tsx
+index e108f6e..913253d 100644
+--- a/apps/studio/components/interfaces/Storage/CreateBucketModal.tsx
++++ b/apps/studio/components/interfaces/Storage/CreateBucketModal.tsx
+@@ -11,7 +11,6 @@ import {
+ } from 'components/to-be-cleaned/Storage/StorageSettings/StorageSettings.utils'
+ import { useProjectStorageConfigQuery } from 'data/config/project-storage-config-query'
+ import { useBucketCreateMutation } from 'data/storage/bucket-create-mutation'
+-import { IS_PLATFORM } from 'lib/constants'
+ import {
+   Alert,
+   Button,
+@@ -42,7 +41,7 @@ const CreateBucketModal = ({ visible, onClose }: CreateBucketModalProps) => {
+     },
+   })
+ 
+-  const { data } = useProjectStorageConfigQuery({ projectRef: ref }, { enabled: IS_PLATFORM })
++  const { data } = useProjectStorageConfigQuery({ projectRef: ref }, { enabled: true })
+   const { value, unit } = convertFromBytes(data?.fileSizeLimit ?? 0)
+   const formattedGlobalUploadLimit = `${value} ${unit}`
+ 
+@@ -207,7 +206,7 @@ const CreateBucketModal = ({ visible, onClose }: CreateBucketModalProps) => {
+                               ))}
+                             </Listbox>
+                           </div>
+-                          {IS_PLATFORM && (
++                          {
+                             <div className="col-span-12">
+                               <p className="text-foreground-light text-sm">
+                                 Note: The{' '}
+@@ -220,7 +219,7 @@ const CreateBucketModal = ({ visible, onClose }: CreateBucketModalProps) => {
+                                 takes precedence over this value ({formattedGlobalUploadLimit})
+                               </p>
+                             </div>
+-                          )}
++                          }
+                         </div>
+                       )}
+                     </div>
+diff --git a/apps/studio/components/interfaces/Storage/EditBucketModal.tsx b/apps/studio/components/interfaces/Storage/EditBucketModal.tsx
+index 1a41f7a..4b084f5 100644
+--- a/apps/studio/components/interfaces/Storage/EditBucketModal.tsx
++++ b/apps/studio/components/interfaces/Storage/EditBucketModal.tsx
+@@ -22,7 +22,6 @@ import {
+ } from 'components/to-be-cleaned/Storage/StorageSettings/StorageSettings.utils'
+ import { useProjectStorageConfigQuery } from 'data/config/project-storage-config-query'
+ import { useBucketUpdateMutation } from 'data/storage/bucket-update-mutation'
+-import { IS_PLATFORM } from 'lib/constants'
+ import type { StorageBucket } from './Storage.types'
+ 
+ export interface EditBucketModalProps {
+@@ -40,7 +39,7 @@ const EditBucketModal = ({ visible, bucket, onClose }: EditBucketModalProps) =>
+       onClose()
+     },
+   })
+-  const { data } = useProjectStorageConfigQuery({ projectRef: ref }, { enabled: IS_PLATFORM })
++  const { data } = useProjectStorageConfigQuery({ projectRef: ref }, { enabled: true })
+   const { value, unit } = convertFromBytes(data?.fileSizeLimit ?? 0)
+   const formattedGlobalUploadLimit = `${value} ${unit}`
+ 
+@@ -213,7 +212,7 @@ const EditBucketModal = ({ visible, bucket, onClose }: EditBucketModalProps) =>
+                               ))}
+                             </Listbox>
+                           </div>
+-                          {IS_PLATFORM && (
++                          {
+                             <div className="col-span-12">
+                               <p className="text-foreground-light text-sm">
+                                 Note: The{' '}
+@@ -226,7 +225,7 @@ const EditBucketModal = ({ visible, bucket, onClose }: EditBucketModalProps) =>
+                                 takes precedence over this value ({formattedGlobalUploadLimit})
+                               </p>
+                             </div>
+-                          )}
++                          }
+                         </div>
+                       )}
+                     </div>
+diff --git a/apps/studio/components/layouts/AccountLayout/AccountLayout.tsx b/apps/studio/components/layouts/AccountLayout/AccountLayout.tsx
+index 58df7e7..b5ccfcc 100644
+--- a/apps/studio/components/layouts/AccountLayout/AccountLayout.tsx
++++ b/apps/studio/components/layouts/AccountLayout/AccountLayout.tsx
+@@ -5,7 +5,6 @@ import { PropsWithChildren, useEffect } from 'react'
+ import { useOrganizationsQuery } from 'data/organizations/organizations-query'
+ import { useFlag, useSelectedOrganization, withAuth } from 'hooks'
+ import { useSignOut } from 'lib/auth'
+-import { IS_PLATFORM } from 'lib/constants'
+ import SettingsLayout from '../SettingsLayout/SettingsLayout'
+ import type { SidebarSection } from './AccountLayout.types'
+ import WithSidebar from './WithSidebar'
+@@ -31,12 +30,6 @@ const AccountLayout = ({ children, title, breadcrumbs }: PropsWithChildren<Accou
+     await router.push('/sign-in')
+   }
+ 
+-  useEffect(() => {
+-    if (!IS_PLATFORM) {
+-      router.push('/project/default')
+-    }
+-  }, [router])
+-
+   const organizationsLinks = (organizations ?? [])
+     .map((organization) => ({
+       isActive:
+@@ -60,7 +53,7 @@ const AccountLayout = ({ children, title, breadcrumbs }: PropsWithChildren<Accou
+         },
+       ],
+     },
+-    ...(IS_PLATFORM && organizationsLinks?.length > 0
++    ...(organizationsLinks?.length > 0
+       ? [
+           {
+             heading: 'Organizations',
+@@ -69,45 +62,43 @@ const AccountLayout = ({ children, title, breadcrumbs }: PropsWithChildren<Accou
+           },
+         ]
+       : []),
+-    ...(IS_PLATFORM
+-      ? [
++    ...[
++      {
++        heading: 'Account',
++        key: 'account',
++        links: [
++          {
++            isActive: router.pathname === `/account/me`,
++            icon: `${router.basePath}/img/user.svg`,
++            label: 'Preferences',
++            href: `/account/me`,
++            key: `/account/me`,
++          },
+           {
+-            heading: 'Account',
+-            key: 'account',
+-            links: [
+-              {
+-                isActive: router.pathname === `/account/me`,
+-                icon: `${router.basePath}/img/user.svg`,
+-                label: 'Preferences',
+-                href: `/account/me`,
+-                key: `/account/me`,
+-              },
+-              {
+-                isActive: router.pathname === `/account/tokens`,
+-                icon: `${router.basePath}/img/user.svg`,
+-                label: 'Access Tokens',
+-                href: `/account/tokens`,
+-                key: `/account/tokens`,
+-              },
++            isActive: router.pathname === `/account/tokens`,
++            icon: `${router.basePath}/img/user.svg`,
++            label: 'Access Tokens',
++            href: `/account/tokens`,
++            key: `/account/tokens`,
++          },
+ 
+-              {
+-                isActive: router.pathname === `/account/security`,
+-                icon: `${router.basePath}/img/user.svg`,
+-                label: 'Security',
+-                href: `/account/security`,
+-                key: `/account/security`,
+-              },
+-              {
+-                isActive: router.pathname === `/account/audit`,
+-                icon: `${router.basePath}/img/user.svg`,
+-                label: 'Audit Logs',
+-                href: `/account/audit`,
+-                key: `/account/audit`,
+-              },
+-            ],
++          {
++            isActive: router.pathname === `/account/security`,
++            icon: `${router.basePath}/img/user.svg`,
++            label: 'Security',
++            href: `/account/security`,
++            key: `/account/security`,
+           },
+-        ]
+-      : []),
++          {
++            isActive: router.pathname === `/account/audit`,
++            icon: `${router.basePath}/img/user.svg`,
++            label: 'Audit Logs',
++            href: `/account/audit`,
++            key: `/account/audit`,
++          },
++        ],
++      },
++    ],
+     {
+       heading: 'Documentation',
+       key: 'documentation',
+@@ -128,22 +119,20 @@ const AccountLayout = ({ children, title, breadcrumbs }: PropsWithChildren<Accou
+         },
+       ],
+     },
+-    ...(IS_PLATFORM
+-      ? [
++    ...[
++      {
++        key: 'logout-link',
++        links: [
+           {
+-            key: 'logout-link',
+-            links: [
+-              {
+-                key: `logout`,
+-                icon: '/icons/feather/power.svg',
+-                label: 'Log out',
+-                href: undefined,
+-                onClick: onClickLogout,
+-              },
+-            ],
++            key: `logout`,
++            icon: '/icons/feather/power.svg',
++            label: 'Log out',
++            href: undefined,
++            onClick: onClickLogout,
+           },
+-        ]
+-      : []),
++        ],
++      },
++    ],
+   ]
+ 
+   if (navLayoutV2) {
+diff --git a/apps/studio/components/layouts/AppLayout/ProjectDropdown.tsx b/apps/studio/components/layouts/AppLayout/ProjectDropdown.tsx
+index 35f7477..fb08e4a 100644
+--- a/apps/studio/components/layouts/AppLayout/ProjectDropdown.tsx
++++ b/apps/studio/components/layouts/AppLayout/ProjectDropdown.tsx
+@@ -7,7 +7,6 @@ import { useParams } from 'common'
+ import ShimmeringLoader from 'components/ui/ShimmeringLoader'
+ import { ProjectInfo, useProjectsQuery } from 'data/projects/projects-query'
+ import { useIsFeatureEnabled, useSelectedOrganization, useSelectedProject } from 'hooks'
+-import { IS_PLATFORM } from 'lib/constants'
+ import type { Organization } from 'types'
+ import {
+   Button,
+@@ -114,7 +113,7 @@ const ProjectDropdown = ({ isNewNav = false }: ProjectDropdownProps) => {
+     return <ShimmeringLoader className="w-[90px]" />
+   }
+ 
+-  return IS_PLATFORM ? (
++  return (
+     <div className="flex items-center px-2">
+       <Popover_Shadcn_ open={open} onOpenChange={setOpen} modal={false}>
+         <PopoverTrigger_Shadcn_ asChild>
+@@ -173,10 +172,6 @@ const ProjectDropdown = ({ isNewNav = false }: ProjectDropdownProps) => {
+         </PopoverContent_Shadcn_>
+       </Popover_Shadcn_>
+     </div>
+-  ) : (
+-    <Button type="text">
+-      <span className={isNewNav ? 'text-sm' : 'text-xs'}>{selectedProject?.name}</span>
+-    </Button>
+   )
+ }
+ 
+diff --git a/apps/studio/components/layouts/AuthLayout/AuthLayout.utils.ts b/apps/studio/components/layouts/AuthLayout/AuthLayout.utils.ts
+index 731fba6..841b41d 100644
+--- a/apps/studio/components/layouts/AuthLayout/AuthLayout.utils.ts
++++ b/apps/studio/components/layouts/AuthLayout/AuthLayout.utils.ts
+@@ -1,5 +1,4 @@
+ import type { ProductMenuGroup } from 'components/ui/ProductMenu/ProductMenu.types'
+-import { IS_PLATFORM } from 'lib/constants'
+ 
+ export const generateAuthMenu = (ref: string): ProductMenuGroup[] => {
+   return [
+@@ -16,41 +15,39 @@ export const generateAuthMenu = (ref: string): ProductMenuGroup[] => {
+           url: `/project/${ref}/auth/policies`,
+           items: [],
+         },
+-        ...(IS_PLATFORM
+-          ? [
+-              {
+-                name: 'Providers',
+-                key: 'providers',
+-                url: `/project/${ref}/auth/providers`,
+-                items: [],
+-              },
+-              {
+-                name: 'Rate Limits',
+-                key: 'rate-limits',
+-                url: `/project/${ref}/auth/rate-limits`,
+-                items: [],
+-              },
+-              {
+-                name: 'Email Templates',
+-                key: 'templates',
+-                url: `/project/${ref}/auth/templates`,
+-                items: [],
+-              },
+-              {
+-                name: 'URL Configuration',
+-                key: 'url-configuration',
+-                url: `/project/${ref}/auth/url-configuration`,
+-                items: [],
+-              },
+-              {
+-                name: 'Hooks',
+-                key: 'hooks',
+-                url: `/project/${ref}/auth/hooks`,
+-                items: [],
+-                label: 'BETA',
+-              },
+-            ]
+-          : []),
++        ...[
++          {
++            name: 'Providers',
++            key: 'providers',
++            url: `/project/${ref}/auth/providers`,
++            items: [],
++          },
++          {
++            name: 'Rate Limits',
++            key: 'rate-limits',
++            url: `/project/${ref}/auth/rate-limits`,
++            items: [],
++          },
++          {
++            name: 'Email Templates',
++            key: 'templates',
++            url: `/project/${ref}/auth/templates`,
++            items: [],
++          },
++          {
++            name: 'URL Configuration',
++            key: 'url-configuration',
++            url: `/project/${ref}/auth/url-configuration`,
++            items: [],
++          },
++          {
++            name: 'Hooks',
++            key: 'hooks',
++            url: `/project/${ref}/auth/hooks`,
++            items: [],
++            label: 'BETA',
++          },
++        ],
+       ],
+     },
+   ]
+diff --git a/apps/studio/components/layouts/DatabaseLayout/DatabaseMenu.utils.tsx b/apps/studio/components/layouts/DatabaseLayout/DatabaseMenu.utils.tsx
+index b967be9..3b10e97 100644
+--- a/apps/studio/components/layouts/DatabaseLayout/DatabaseMenu.utils.tsx
++++ b/apps/studio/components/layouts/DatabaseLayout/DatabaseMenu.utils.tsx
+@@ -1,6 +1,5 @@
+ import type { ProductMenuGroup } from 'components/ui/ProductMenu/ProductMenu.types'
+ import type { Project } from 'data/projects/project-detail-query'
+-import { IS_PLATFORM } from 'lib/constants'
+ import { ArrowUpRight } from 'lucide-react'
+ 
+ export const generateDatabaseMenu = (
+@@ -85,18 +84,16 @@ export const generateDatabaseMenu = (
+     {
+       title: 'Platform',
+       items: [
+-        ...(IS_PLATFORM
+-          ? [
+-              {
+-                name: 'Backups',
+-                key: 'backups',
+-                url: pitrEnabled
+-                  ? `/project/${ref}/database/backups/pitr`
+-                  : `/project/${ref}/database/backups/scheduled`,
+-                items: [],
+-              },
+-            ]
+-          : []),
++        ...[
++          {
++            name: 'Backups',
++            key: 'backups',
++            url: pitrEnabled
++              ? `/project/${ref}/database/backups/pitr`
++              : `/project/${ref}/database/backups/scheduled`,
++            items: [],
++          },
++        ],
+         {
+           name: 'Wrappers',
+           key: 'wrappers',
+diff --git a/apps/studio/components/layouts/LogsLayout/LogsMenu.utils.ts b/apps/studio/components/layouts/LogsLayout/LogsMenu.utils.ts
+index 78712e8..434d810 100644
+--- a/apps/studio/components/layouts/LogsLayout/LogsMenu.utils.ts
++++ b/apps/studio/components/layouts/LogsLayout/LogsMenu.utils.ts
+@@ -3,7 +3,6 @@ import type {
+   ProductMenuGroupItem,
+ } from 'components/ui/ProductMenu/ProductMenu.types'
+ import type { Project } from 'data/projects/project-detail-query'
+-import { IS_PLATFORM } from 'lib/constants'
+ 
+ export const generateLogsMenu = (
+   project?: Project,
+@@ -21,7 +20,7 @@ export const generateLogsMenu = (
+       items: (
+         [
+           { key: 'explorer', name: 'Query', root: true },
+-          IS_PLATFORM ? { key: 'saved', name: 'Saved Queries' } : null,
++          { key: 'saved', name: 'Saved Queries' },
+           { key: 'recent', name: 'Recent Queries' },
+           { key: 'templates', name: 'Templates' },
+         ].filter((item) => item) as { name: string; key: string; root: boolean }[]
+@@ -53,15 +52,12 @@ export const generateLogsMenu = (
+           url: `/project/${ref}/logs/postgrest-logs`,
+           items: [],
+         },
+-        IS_PLATFORM
+-          ? {
+-              name: 'Pooler',
+-              key: 'pooler-logs',
+-              url: `/project/${ref}/logs/pooler-logs`,
+-              items: [],
+-            }
+-          : null,
+-        ,
++        {
++          name: 'Pooler',
++          key: 'pooler-logs',
++          url: `/project/${ref}/logs/pooler-logs`,
++          items: [],
++        },
+         authEnabled
+           ? {
+               name: 'Auth',
+diff --git a/apps/studio/components/layouts/ProjectLayout/LayoutHeader/LayoutHeader.tsx b/apps/studio/components/layouts/ProjectLayout/LayoutHeader/LayoutHeader.tsx
+index d2a8011..856dd86 100644
+--- a/apps/studio/components/layouts/ProjectLayout/LayoutHeader/LayoutHeader.tsx
++++ b/apps/studio/components/layouts/ProjectLayout/LayoutHeader/LayoutHeader.tsx
+@@ -11,7 +11,6 @@ import { getResourcesExceededLimitsOrg } from 'components/ui/OveragesBanner/Over
+ import { useOrgSubscriptionQuery } from 'data/subscriptions/org-subscription-query'
+ import { useOrgUsageQuery } from 'data/usage/org-usage-query'
+ import { useSelectedOrganization, useSelectedProject } from 'hooks'
+-import { IS_PLATFORM } from 'lib/constants'
+ import BreadcrumbsView from './BreadcrumbsView'
+ import { FeedbackDropdown } from './FeedbackDropdown'
+ import HelpPopover from './HelpPopover'
+@@ -114,13 +113,13 @@ const LayoutHeader = ({ customHeaderComponents, breadcrumbs = [], headerBorder =
+       </div>
+       <div className="flex items-center gap-x-2">
+         {customHeaderComponents && customHeaderComponents}
+-        {IS_PLATFORM && (
++        {
+           <>
+             <FeedbackDropdown />
+             <NotificationsPopoverV2 />
+             <HelpPopover />
+           </>
+-        )}
++        }
+       </div>
+     </div>
+   )
+diff --git a/apps/studio/components/layouts/ProjectLayout/NavigationBar/NavigationBar.tsx b/apps/studio/components/layouts/ProjectLayout/NavigationBar/NavigationBar.tsx
+index f838e14..830ffe5 100644
+--- a/apps/studio/components/layouts/ProjectLayout/NavigationBar/NavigationBar.tsx
++++ b/apps/studio/components/layouts/ProjectLayout/NavigationBar/NavigationBar.tsx
+@@ -27,7 +27,6 @@ import { useCommandMenu } from 'ui-patterns/Cmdk'
+ 
+ import { useIsAPIDocsSidePanelEnabled } from 'components/interfaces/App/FeaturePreview/FeaturePreviewContext'
+ import { useSignOut } from 'lib/auth'
+-import { IS_PLATFORM } from 'lib/constants'
+ import { detectOS } from 'lib/helpers'
+ import { useProfile } from 'lib/profile'
+ import { useAppStateSnapshot } from 'state/app-state'
+@@ -107,9 +106,9 @@ const NavigationBar = () => {
+         }}
+       >
+         <ul className="flex flex-col gap-y-1 justify-start px-2">
+-          {(!navLayoutV2 || !IS_PLATFORM) && (
++          {!navLayoutV2 && (
+             <Link
+-              href={IS_PLATFORM ? '/projects' : `/project/${projectRef}`}
++              href={`/project/${projectRef}`}
+               className="mx-2 flex items-center h-[40px]"
+               onClick={onCloseNavigationIconLink}
+             >
+@@ -186,7 +185,7 @@ const NavigationBar = () => {
+             />
+           ))}
+ 
+-          {IS_PLATFORM && (
++          {
+             <NavigationIconButton
+               size="tiny"
+               onClick={() => {
+@@ -216,7 +215,7 @@ const NavigationBar = () => {
+             >
+               Search
+             </NavigationIconButton>
+-          )}
++          }
+ 
+           <DropdownMenu
+             open={userDropdownOpen}
+@@ -250,7 +249,7 @@ const NavigationBar = () => {
+                       'transition-all'
+                     )}
+                   >
+-                    {profile && IS_PLATFORM && (
++                    {profile && (
+                       <>
+                         <span
+                           title={profile.username}
+@@ -273,7 +272,7 @@ const NavigationBar = () => {
+               </Button>
+             </DropdownMenuTrigger>
+             <DropdownMenuContent side="top" align="start">
+-              {IS_PLATFORM && (
++              {
+                 <>
+                   <div className="px-2 py-1 flex flex-col gap-0 text-sm">
+                     {profile && (
+@@ -314,7 +313,7 @@ const NavigationBar = () => {
+                     <DropdownMenuSeparator />
+                   </DropdownMenuGroup>
+                 </>
+-              )}
++              }
+               <DropdownMenuGroup>
+                 <DropdownMenuLabel>Theme</DropdownMenuLabel>
+                 <DropdownMenuRadioGroup
+@@ -334,7 +333,7 @@ const NavigationBar = () => {
+                     ))}
+                 </DropdownMenuRadioGroup>
+               </DropdownMenuGroup>
+-              {IS_PLATFORM && (
++              {
+                 <>
+                   <DropdownMenuSeparator />
+                   <DropdownMenuGroup>
+@@ -348,7 +347,7 @@ const NavigationBar = () => {
+                     </DropdownMenuItem>
+                   </DropdownMenuGroup>
+                 </>
+-              )}
++              }
+             </DropdownMenuContent>
+           </DropdownMenu>
+         </ul>
+diff --git a/apps/studio/components/layouts/ProjectLayout/NavigationBar/NavigationBar.utils.tsx b/apps/studio/components/layouts/ProjectLayout/NavigationBar/NavigationBar.utils.tsx
+index 30ecb4d..aad7ef1 100644
+--- a/apps/studio/components/layouts/ProjectLayout/NavigationBar/NavigationBar.utils.tsx
++++ b/apps/studio/components/layouts/ProjectLayout/NavigationBar/NavigationBar.utils.tsx
+@@ -1,6 +1,6 @@
+ import type { Route } from 'components/ui/ui.types'
+ import type { Project } from 'data/projects/project-detail-query'
+-import { IS_PLATFORM, PROJECT_STATUS } from 'lib/constants'
++import { PROJECT_STATUS } from 'lib/constants'
+ import {
+   Auth,
+   Database,
+@@ -29,9 +29,7 @@ export const generateToolRoutes = (ref?: string, project?: Project): Route[] =>
+       key: 'sql',
+       label: 'SQL Editor',
+       icon: <SqlEditor size={ICON_SIZE} strokeWidth={ICON_STROKE_WIDTH} />,
+-      link: !IS_PLATFORM
+-        ? `/project/${ref}/sql/1`
+-        : ref && (isProjectBuilding ? buildingUrl : `/project/${ref}/sql/new`),
++      link: ref && (isProjectBuilding ? buildingUrl : `/project/${ref}/sql/new`),
+     },
+   ]
+ }
+@@ -75,7 +73,7 @@ export const generateProductRoutes = (
+           },
+         ]
+       : []),
+-    ...(IS_PLATFORM && edgeFunctionsEnabled
++    ...(edgeFunctionsEnabled
+       ? [
+           {
+             key: 'functions',
+@@ -103,16 +101,14 @@ export const generateOtherRoutes = (ref?: string, project?: Project): Route[] =>
+   const buildingUrl = `/project/${ref}/building`
+ 
+   return [
+-    ...(IS_PLATFORM
+-      ? [
+-          {
+-            key: 'reports',
+-            label: 'Reports',
+-            icon: <Reports size={ICON_SIZE} strokeWidth={ICON_STROKE_WIDTH} />,
+-            link: ref && (isProjectBuilding ? buildingUrl : `/project/${ref}/reports`),
+-          },
+-        ]
+-      : []),
++    ...[
++      {
++        key: 'reports',
++        label: 'Reports',
++        icon: <Reports size={ICON_SIZE} strokeWidth={ICON_STROKE_WIDTH} />,
++        link: ref && (isProjectBuilding ? buildingUrl : `/project/${ref}/reports`),
++      },
++    ],
+     {
+       key: 'logs',
+       label: 'Logs',
+@@ -130,15 +126,13 @@ export const generateOtherRoutes = (ref?: string, project?: Project): Route[] =>
+ 
+ export const generateSettingsRoutes = (ref?: string, project?: Project): Route[] => {
+   return [
+-    ...(IS_PLATFORM
+-      ? [
+-          {
+-            key: 'settings',
+-            label: 'Project Settings',
+-            icon: <Settings size={ICON_SIZE} strokeWidth={ICON_STROKE_WIDTH} />,
+-            link: ref && `/project/${ref}/settings/general`,
+-          },
+-        ]
+-      : []),
++    ...[
++      {
++        key: 'settings',
++        label: 'Project Settings',
++        icon: <Settings size={ICON_SIZE} strokeWidth={ICON_STROKE_WIDTH} />,
++        link: ref && `/project/${ref}/settings/general`,
++      },
++    ],
+   ]
+ }
+diff --git a/apps/studio/components/layouts/ProjectLayout/ProjectLayout.tsx b/apps/studio/components/layouts/ProjectLayout/ProjectLayout.tsx
+index 52971bb..79a0d8a 100644
+--- a/apps/studio/components/layouts/ProjectLayout/ProjectLayout.tsx
++++ b/apps/studio/components/layouts/ProjectLayout/ProjectLayout.tsx
+@@ -8,7 +8,7 @@ import AISettingsModal from 'components/ui/AISettingsModal'
+ import { Loading } from 'components/ui/Loading'
+ import ResourceExhaustionWarningBanner from 'components/ui/ResourceExhaustionWarningBanner/ResourceExhaustionWarningBanner'
+ import { useFlag, useSelectedOrganization, useSelectedProject, withAuth } from 'hooks'
+-import { IS_PLATFORM, PROJECT_STATUS } from 'lib/constants'
++import { PROJECT_STATUS } from 'lib/constants'
+ import { useDatabaseSelectorStateSnapshot } from 'state/database-selector'
+ import AppLayout from '../AppLayout/AppLayout'
+ import EnableBranchingModal from '../AppLayout/EnableBranchingButton/EnableBranchingModal'
+@@ -132,7 +132,7 @@ const ProjectLayout = ({
+             )}
+             <ResizablePanel className="h-full">
+               <main className="h-full flex flex-col flex-1 w-full overflow-x-hidden">
+-                {!navLayoutV2 && !hideHeader && IS_PLATFORM && <LayoutHeader />}
++                {!navLayoutV2 && !hideHeader && <LayoutHeader />}
+                 {showPausedState ? (
+                   <div className="mx-auto my-16 w-full h-full max-w-7xl flex items-center">
+                     <div className="w-full">
+diff --git a/apps/studio/components/layouts/ProjectLayout/UpgradingState/UpgradingState.tsx b/apps/studio/components/layouts/ProjectLayout/UpgradingState/UpgradingState.tsx
+index f9bef79..4027f7a 100644
+--- a/apps/studio/components/layouts/ProjectLayout/UpgradingState/UpgradingState.tsx
++++ b/apps/studio/components/layouts/ProjectLayout/UpgradingState/UpgradingState.tsx
+@@ -19,7 +19,6 @@ import { useQueryClient } from '@tanstack/react-query'
+ import { useParams } from 'common/hooks'
+ import { useProjectUpgradingStatusQuery } from 'data/config/project-upgrade-status-query'
+ import { invalidateProjectDetailsQuery } from 'data/projects/project-detail-query'
+-import { IS_PLATFORM } from 'lib/constants'
+ import { useProjectContext } from '../ProjectContext'
+ import { DATABASE_UPGRADE_MESSAGES } from './UpgradingState.constants'
+ 
+@@ -35,7 +34,7 @@ const UpgradingState = () => {
+       projectStatus: project?.status,
+     },
+     {
+-      enabled: IS_PLATFORM,
++      enabled: true,
+     }
+   )
+ 
+diff --git a/apps/studio/components/layouts/ProjectSettingsLayout/SettingsLayout.tsx b/apps/studio/components/layouts/ProjectSettingsLayout/SettingsLayout.tsx
+index 72937b8..d97b9e6 100644
+--- a/apps/studio/components/layouts/ProjectSettingsLayout/SettingsLayout.tsx
++++ b/apps/studio/components/layouts/ProjectSettingsLayout/SettingsLayout.tsx
+@@ -6,7 +6,6 @@ import { generateSettingsMenu } from './SettingsMenu.utils'
+ import { useParams } from 'common'
+ import { ProductMenu } from 'components/ui/ProductMenu'
+ import { ProjectLayout } from '..'
+-import { IS_PLATFORM } from 'lib/constants'
+ 
+ interface SettingsLayoutProps {
+   title?: string
+@@ -18,12 +17,6 @@ const SettingsLayout = ({ title, children }: PropsWithChildren<SettingsLayoutPro
+   const project = useSelectedProject()
+   const organization = useSelectedOrganization()
+ 
+-  useEffect(() => {
+-    if (!IS_PLATFORM) {
+-      router.push('/project/default')
+-    }
+-  }, [router])
+-
+   // billing pages live under /billing/invoices and /billing/subscription, etc
+   // so we need to pass the [5]th part of the url to the menu
+   const page = router.pathname.includes('billing')
+diff --git a/apps/studio/components/layouts/ProjectSettingsLayout/SettingsMenu.utils.ts b/apps/studio/components/layouts/ProjectSettingsLayout/SettingsMenu.utils.ts
+index dc5230b..c049bf2 100644
+--- a/apps/studio/components/layouts/ProjectSettingsLayout/SettingsMenu.utils.ts
++++ b/apps/studio/components/layouts/ProjectSettingsLayout/SettingsMenu.utils.ts
+@@ -1,6 +1,6 @@
+ import type { ProductMenuGroup } from 'components/ui/ProductMenu/ProductMenu.types'
+ import type { Project } from 'data/projects/project-detail-query'
+-import { IS_PLATFORM, PROJECT_STATUS } from 'lib/constants'
++import { PROJECT_STATUS } from 'lib/constants'
+ import type { Organization } from 'types'
+ 
+ export const generateSettingsMenu = (
+@@ -37,16 +37,14 @@ export const generateSettingsMenu = (
+           url: isProjectBuilding ? buildingUrl : `/project/${ref}/settings/infrastructure`,
+           items: [],
+         },
+-        ...(IS_PLATFORM
+-          ? [
+-              {
+-                name: 'Integrations',
+-                key: 'integrations',
+-                url: `/project/${ref}/settings/integrations`,
+-                items: [],
+-              },
+-            ]
+-          : []),
++        ...[
++          {
++            name: 'Integrations',
++            key: 'integrations',
++            url: `/project/${ref}/settings/integrations`,
++            items: [],
++          },
++        ],
+         ...[
+           {
+             name: 'Add Ons',
+@@ -79,7 +77,7 @@ export const generateSettingsMenu = (
+           url: isProjectBuilding ? buildingUrl : `/project/${ref}/settings/api`,
+           items: [],
+         },
+-        ...(IS_PLATFORM && authEnabled
++        ...(authEnabled
+           ? [
+               {
+                 name: 'Authentication',
+@@ -89,7 +87,7 @@ export const generateSettingsMenu = (
+               },
+             ]
+           : []),
+-        ...(IS_PLATFORM && storageEnabled
++        ...(storageEnabled
+           ? [
+               {
+                 name: 'Storage',
+@@ -99,7 +97,7 @@ export const generateSettingsMenu = (
+               },
+             ]
+           : []),
+-        ...(IS_PLATFORM && edgeFunctionsEnabled
++        ...(edgeFunctionsEnabled
+           ? [
+               {
+                 name: 'Edge Functions',
+diff --git a/apps/studio/components/layouts/SQLEditorLayout/QueryItemActions.tsx b/apps/studio/components/layouts/SQLEditorLayout/QueryItemActions.tsx
+index 751a6c5..dfd54d6 100644
+--- a/apps/studio/components/layouts/SQLEditorLayout/QueryItemActions.tsx
++++ b/apps/studio/components/layouts/SQLEditorLayout/QueryItemActions.tsx
+@@ -1,5 +1,5 @@
+ import { PermissionAction } from '@supabase/shared-types/out/constants'
+-import { IS_PLATFORM, useParams } from 'common'
++import { useParams } from 'common'
+ import { Copy, Download, Edit, MoreHorizontal, Share, Trash } from 'lucide-react'
+ import { useRouter } from 'next/router'
+ import toast from 'react-hot-toast'
+@@ -96,63 +96,57 @@ export const QueryItemActions = ({
+ 
+   return (
+     <>
+-      {IS_PLATFORM ? (
+-        <DropdownMenu open={open} onOpenChange={setOpen}>
+-          <DropdownMenuTrigger
+-            className="opacity-0 group-hover:opacity-100 group-focus:opacity-100 focus:opacity-100 data-[state=open]:opacity-100"
+-            asChild
+-            name="Query actions"
+-          >
+-            <Button
+-              type="text"
+-              className="px-1 text-lighter data-[state=open]:text-foreground"
+-              icon={<MoreHorizontal size={14} strokeWidth={2} />}
+-              onClick={(e) => e.preventDefault()}
+-            />
+-          </DropdownMenuTrigger>
+-          <DropdownMenuContent side="bottom" align="start" className="w-52">
+-            {isSnippetOwner && (
+-              <DropdownMenuItem onClick={onClickRename} className="flex gap-2">
+-                <Edit size={14} />
+-                Rename query
+-              </DropdownMenuItem>
+-            )}
++      <DropdownMenu open={open} onOpenChange={setOpen}>
++        <DropdownMenuTrigger
++          className="opacity-0 group-hover:opacity-100 group-focus:opacity-100 focus:opacity-100 data-[state=open]:opacity-100"
++          asChild
++          name="Query actions"
++        >
++          <Button
++            type="text"
++            className="px-1 text-lighter data-[state=open]:text-foreground"
++            icon={<MoreHorizontal size={14} strokeWidth={2} />}
++            onClick={(e) => e.preventDefault()}
++          />
++        </DropdownMenuTrigger>
++        <DropdownMenuContent side="bottom" align="start" className="w-52">
++          {isSnippetOwner && (
++            <DropdownMenuItem onClick={onClickRename} className="flex gap-2">
++              <Edit size={14} />
++              Rename query
++            </DropdownMenuItem>
++          )}
+ 
+-            {visibility === 'user' && canCreateSQLSnippet && (
+-              <DropdownMenuItem onClick={onClickShare} className="flex gap-2">
+-                <Share size={14} />
+-                Share query
+-              </DropdownMenuItem>
+-            )}
+-            {visibility === 'project' && canCreateSQLSnippet && (
+-              <DropdownMenuItem onClick={createPersonalCopy} className="flex gap-2">
+-                <Copy size={14} />
+-                Duplicate personal copy
+-              </DropdownMenuItem>
+-            )}
++          {visibility === 'user' && canCreateSQLSnippet && (
++            <DropdownMenuItem onClick={onClickShare} className="flex gap-2">
++              <Share size={14} />
++              Share query
++            </DropdownMenuItem>
++          )}
++          {visibility === 'project' && canCreateSQLSnippet && (
++            <DropdownMenuItem onClick={createPersonalCopy} className="flex gap-2">
++              <Copy size={14} />
++              Duplicate personal copy
++            </DropdownMenuItem>
++          )}
+ 
+-            {IS_PLATFORM && (
+-              <DropdownMenuItem onClick={() => onSelectDownloadQuery()} className="flex gap-2">
+-                <Download size={14} />
+-                Download as migration file
++          {
++            <DropdownMenuItem onClick={() => onSelectDownloadQuery()} className="flex gap-2">
++              <Download size={14} />
++              Download as migration file
++            </DropdownMenuItem>
++          }
++          {isSnippetOwner && (
++            <>
++              <DropdownMenuSeparator />
++              <DropdownMenuItem onClick={onClickDelete} className="flex gap-2">
++                <Trash size={14} />
++                Delete query
+               </DropdownMenuItem>
+-            )}
+-            {isSnippetOwner && (
+-              <>
+-                <DropdownMenuSeparator />
+-                <DropdownMenuItem onClick={onClickDelete} className="flex gap-2">
+-                  <Trash size={14} />
+-                  Delete query
+-                </DropdownMenuItem>
+-              </>
+-            )}
+-          </DropdownMenuContent>
+-        </DropdownMenu>
+-      ) : (
+-        <Button asChild disabled type="text" style={{ padding: '3px' }}>
+-          <span />
+-        </Button>
+-      )}
++            </>
++          )}
++        </DropdownMenuContent>
++      </DropdownMenu>
+     </>
+   )
+ }
+diff --git a/apps/studio/components/layouts/TableEditorLayout/EntityListItem.tsx b/apps/studio/components/layouts/TableEditorLayout/EntityListItem.tsx
+index 08a0567..a42ed44 100644
+--- a/apps/studio/components/layouts/TableEditorLayout/EntityListItem.tsx
++++ b/apps/studio/components/layouts/TableEditorLayout/EntityListItem.tsx
+@@ -5,7 +5,6 @@ import Link from 'next/link'
+ import Papa from 'papaparse'
+ import toast from 'react-hot-toast'
+ 
+-import { IS_PLATFORM } from 'common'
+ import { parseSupaTable } from 'components/grid'
+ import type { ItemRenderer } from 'components/ui/InfiniteList'
+ import { ENTITY_TYPE } from 'data/entity-types/entity-type-constants'
+@@ -54,7 +53,7 @@ const EntityListItem: ItemRenderer<Entity, EntityListItemProps> = ({
+   }
+ 
+   const exportTableAsCSV = async () => {
+-    if (IS_PLATFORM && !project?.connectionString) {
++    if (!project?.connectionString) {
+       return console.error('Connection string is required')
+     }
+     const toastId = toast.loading(`Exporting ${entity.name} as CSV...`)
+diff --git a/apps/studio/components/to-be-cleaned/Storage/StorageExplorer/StorageExplorer.tsx b/apps/studio/components/to-be-cleaned/Storage/StorageExplorer/StorageExplorer.tsx
+index 95e4943..4805994 100644
+--- a/apps/studio/components/to-be-cleaned/Storage/StorageExplorer/StorageExplorer.tsx
++++ b/apps/studio/components/to-be-cleaned/Storage/StorageExplorer/StorageExplorer.tsx
+@@ -7,7 +7,7 @@ import toast from 'react-hot-toast'
+ import { useProjectSettingsQuery } from 'data/config/project-settings-query'
+ import { useCustomDomainsQuery } from 'data/custom-domains/custom-domains-query'
+ import type { Bucket } from 'data/storage/buckets-query'
+-import { DEFAULT_PROJECT_API_SERVICE_ID, IS_PLATFORM } from 'lib/constants'
++import { DEFAULT_PROJECT_API_SERVICE_ID } from 'lib/constants'
+ import { copyToClipboard } from 'lib/helpers'
+ import { useStorageStore } from 'localStores/storageExplorer/StorageExplorerStore'
+ import { STORAGE_ROW_TYPES, STORAGE_VIEWS } from '../Storage.constants'
+@@ -62,7 +62,7 @@ const StorageExplorer = ({ bucket }: StorageExplorerProps) => {
+ 
+   // [Joshen] This is to ensure that StorageExplorerStore can get the storage file size limit
+   // Will be better once we deprecate the mobx store entirely, which we will get there
+-  useProjectStorageConfigQuery({ projectRef: ref }, { enabled: IS_PLATFORM })
++  useProjectStorageConfigQuery({ projectRef: ref }, { enabled: true })
+ 
+   const apiService = (projectSettings?.services ?? []).find(
+     (x) => x.app.id == DEFAULT_PROJECT_API_SERVICE_ID
+diff --git a/apps/studio/components/to-be-cleaned/Storage/StorageSettings/StorageSettings.tsx b/apps/studio/components/to-be-cleaned/Storage/StorageSettings/StorageSettings.tsx
+index 4bbde7e..4d2fe47 100644
+--- a/apps/studio/components/to-be-cleaned/Storage/StorageSettings/StorageSettings.tsx
++++ b/apps/studio/components/to-be-cleaned/Storage/StorageSettings/StorageSettings.tsx
+@@ -11,7 +11,6 @@ import UpgradeToPro from 'components/ui/UpgradeToPro'
+ import { useProjectStorageConfigQuery } from 'data/config/project-storage-config-query'
+ import { useProjectStorageConfigUpdateUpdateMutation } from 'data/config/project-storage-config-update-mutation'
+ import { useCheckPermissions, useSelectedOrganization } from 'hooks'
+-import { IS_PLATFORM } from 'lib/constants'
+ import { STORAGE_FILE_SIZE_LIMIT_MAX_BYTES, StorageSizeUnits } from './StorageSettings.constants'
+ import { convertFromBytes, convertToBytes } from './StorageSettings.utils'
+ 
+@@ -28,7 +27,7 @@ const StorageSettings = () => {
+     isLoading,
+     isSuccess,
+     isError,
+-  } = useProjectStorageConfigQuery({ projectRef }, { enabled: IS_PLATFORM })
++  } = useProjectStorageConfigQuery({ projectRef }, { enabled: true })
+   const { fileSizeLimit, isFreeTier } = config || {}
+   const { value, unit } = convertFromBytes(fileSizeLimit ?? 0)
+ 
+diff --git a/apps/studio/components/ui/AISettingsModal.tsx b/apps/studio/components/ui/AISettingsModal.tsx
+index 8daf70a..ad8c89a 100644
+--- a/apps/studio/components/ui/AISettingsModal.tsx
++++ b/apps/studio/components/ui/AISettingsModal.tsx
+@@ -10,7 +10,7 @@ import {
+ } from 'ui'
+ 
+ import { useLocalStorageQuery, useSelectedOrganization } from 'hooks'
+-import { IS_PLATFORM, LOCAL_STORAGE_KEYS, OPT_IN_TAGS } from 'lib/constants'
++import { LOCAL_STORAGE_KEYS, OPT_IN_TAGS } from 'lib/constants'
+ import { useAppStateSnapshot } from 'state/app-state'
+ import { WarningIcon } from 'ui-patterns/Icons/StatusIcons'
+ 
+@@ -24,7 +24,7 @@ const AISettingsModal = () => {
+     true
+   )
+ 
+-  const includeSchemaMetadata = (isOptedInToAI || !IS_PLATFORM) && hasEnabledAISchema
++  const includeSchemaMetadata = isOptedInToAI && hasEnabledAISchema
+ 
+   const handleOptInToggle = () => {
+     setHasEnabledAISchema((prev) => !prev)
+@@ -41,7 +41,7 @@ const AISettingsModal = () => {
+       <div className="flex flex-col items-start justify-between gap-y-4 px-6 py-3">
+         <div className="flex justify-between gap-x-8 mr-8 my-4">
+           <Toggle
+-            disabled={IS_PLATFORM && !isOptedInToAI}
++            disabled={!isOptedInToAI}
+             checked={includeSchemaMetadata}
+             onChange={handleOptInToggle}
+           />
+@@ -53,7 +53,7 @@ const AISettingsModal = () => {
+             </p>
+           </div>
+         </div>
+-        {IS_PLATFORM && !isOptedInToAI && selectedOrganization && (
++        {!isOptedInToAI && selectedOrganization && (
+           <Alert_Shadcn_ variant="warning">
+             <WarningIcon />
+             <AlertTitle_Shadcn_>
+diff --git a/apps/studio/components/ui/Flag/FlagProvider.tsx b/apps/studio/components/ui/Flag/FlagProvider.tsx
+index 57f11d9..d0fbc65 100644
+--- a/apps/studio/components/ui/Flag/FlagProvider.tsx
++++ b/apps/studio/components/ui/Flag/FlagProvider.tsx
+@@ -1,7 +1,6 @@
+ import type { User } from '@supabase/supabase-js'
+ import { PropsWithChildren, useEffect, useState } from 'react'
+ 
+-import { IS_PLATFORM } from 'lib/constants'
+ import FlagContext from './FlagContext'
+ import { useUser } from 'lib/auth'
+ import { getFlags } from 'lib/configcat'
+@@ -27,7 +26,7 @@ const FlagProvider = ({ children }: PropsWithChildren<{}>) => {
+     // as per https://configcat.com/docs/sdk-reference/js/#polling-modes:
+     // The polling downloads the config.json at the set interval and are stored in the internal cache
+     // which subsequently all getValueAsync() calls are served from there
+-    if (IS_PLATFORM) processFlags(user ?? undefined)
++    processFlags(user ?? undefined)
+   }, [user])
+ 
+   return <Provider value={store}>{children}</Provider>
+diff --git a/apps/studio/components/ui/PageTelemetry.tsx b/apps/studio/components/ui/PageTelemetry.tsx
+index ccfdeaf..4381829 100644
+--- a/apps/studio/components/ui/PageTelemetry.tsx
++++ b/apps/studio/components/ui/PageTelemetry.tsx
+@@ -4,7 +4,7 @@ import { PropsWithChildren, useEffect } from 'react'
+ 
+ import { useSelectedOrganization } from 'hooks'
+ import { post } from 'lib/common/fetch'
+-import { API_URL, IS_PLATFORM, LOCAL_STORAGE_KEYS } from 'lib/constants'
++import { API_URL, LOCAL_STORAGE_KEYS } from 'lib/constants'
+ import { useAppStateSnapshot } from 'state/app-state'
+ 
+ const PageTelemetry = ({ children }: PropsWithChildren<{}>) => {
+@@ -51,35 +51,33 @@ const PageTelemetry = ({ children }: PropsWithChildren<{}>) => {
+    * @param route: the browser url
+    * */
+   const handlePageTelemetry = async (route: string) => {
+-    if (IS_PLATFORM) {
+-      /**
+-       * Get referrer from browser
+-       */
+-      let referrer: string | undefined = document.referrer
++    /**
++     * Get referrer from browser
++     */
++    let referrer: string | undefined = document.referrer
+ 
+-      /**
+-       * Send page telemetry
+-       */
+-      post(`${API_URL}/telemetry/page`, {
++    /**
++     * Send page telemetry
++     */
++    post(`${API_URL}/telemetry/page`, {
++      referrer: referrer,
++      title: document.title,
++      route,
++      ga: {
++        screen_resolution: telemetryProps?.screenResolution,
++        language: telemetryProps?.language,
++      },
++    })
++
++    if (isLoggedIn) {
++      post(`${API_URL}/telemetry/pageview`, {
++        ...(ref && { projectRef: ref }),
++        ...(selectedOrganization && { orgSlug: selectedOrganization.slug }),
+         referrer: referrer,
+         title: document.title,
+-        route,
+-        ga: {
+-          screen_resolution: telemetryProps?.screenResolution,
+-          language: telemetryProps?.language,
+-        },
++        path: router.route,
++        location: router.asPath,
+       })
+-
+-      if (isLoggedIn) {
+-        post(`${API_URL}/telemetry/pageview`, {
+-          ...(ref && { projectRef: ref }),
+-          ...(selectedOrganization && { orgSlug: selectedOrganization.slug }),
+-          referrer: referrer,
+-          title: document.title,
+-          path: router.route,
+-          location: router.asPath,
+-        })
+-      }
+     }
+   }
+ 
+diff --git a/apps/studio/components/ui/ProjectUpgradeFailedBanner.tsx b/apps/studio/components/ui/ProjectUpgradeFailedBanner.tsx
+index 9b1cfe5..e214ecb 100644
+--- a/apps/studio/components/ui/ProjectUpgradeFailedBanner.tsx
++++ b/apps/studio/components/ui/ProjectUpgradeFailedBanner.tsx
+@@ -6,13 +6,12 @@ import { useState } from 'react'
+ import { Alert, Button, IconX } from 'ui'
+ 
+ import { useProjectUpgradingStatusQuery } from 'data/config/project-upgrade-status-query'
+-import { IS_PLATFORM } from 'lib/constants'
+ 
+ // [Joshen] Think twice about the category though - it doesn't correspond
+ 
+ const ProjectUpgradeFailedBanner = () => {
+   const { ref } = useParams()
+-  const { data } = useProjectUpgradingStatusQuery({ projectRef: ref }, { enabled: IS_PLATFORM })
++  const { data } = useProjectUpgradingStatusQuery({ projectRef: ref }, { enabled: true })
+   const { status, initiated_at, error } = data?.databaseUpgradeStatus ?? {}
+ 
+   const key = `supabase-upgrade-${ref}-${initiated_at}`
+diff --git a/apps/studio/data/config/pgbouncer-enabled-query.ts b/apps/studio/data/config/pgbouncer-enabled-query.ts
+index fa176d2..6252750 100644
+--- a/apps/studio/data/config/pgbouncer-enabled-query.ts
++++ b/apps/studio/data/config/pgbouncer-enabled-query.ts
+@@ -2,7 +2,6 @@ import { useQuery, UseQueryOptions } from '@tanstack/react-query'
+ import { configKeys } from './keys'
+ import type { ResponseError } from 'types'
+ import { get } from 'data/fetchers'
+-import { IS_PLATFORM } from 'lib/constants'
+ 
+ type PgBouncerVariables = {
+   projectRef?: string
+@@ -31,7 +30,7 @@ export const usePgBouncerStatus = <TData = PgBouncerStatusData>(
+     configKeys.pgBouncerStatus(projectRef),
+     ({ signal }) => getPgBouncerStatus({ projectRef }, signal),
+     {
+-      enabled: enabled && IS_PLATFORM && typeof projectRef !== 'undefined',
++      enabled: enabled && typeof projectRef !== 'undefined',
+       ...options,
+     }
+   )
+diff --git a/apps/studio/data/config/project-upgrade-eligibility-query.ts b/apps/studio/data/config/project-upgrade-eligibility-query.ts
+index 095b155..07ebcbe 100644
+--- a/apps/studio/data/config/project-upgrade-eligibility-query.ts
++++ b/apps/studio/data/config/project-upgrade-eligibility-query.ts
+@@ -1,6 +1,5 @@
+ import { useQuery, UseQueryOptions } from '@tanstack/react-query'
+ 
+-import { IS_PLATFORM } from 'common'
+ import { get } from 'data/fetchers'
+ import { useProjectByRef } from 'hooks'
+ import { PROJECT_STATUS } from 'lib/constants/infrastructure'
+@@ -53,8 +52,7 @@ export const useProjectUpgradeEligibilityQuery = <TData = ProjectUpgradeEligibil
+         enabled &&
+         project !== undefined &&
+         project.status !== PROJECT_STATUS.INACTIVE &&
+-        typeof projectRef !== 'undefined' &&
+-        IS_PLATFORM,
++        typeof projectRef !== 'undefined',
+       ...options,
+     }
+   )
+diff --git a/apps/studio/data/custom-domains/custom-domains-query.ts b/apps/studio/data/custom-domains/custom-domains-query.ts
+index 1ffd8cd..f871228 100644
+--- a/apps/studio/data/custom-domains/custom-domains-query.ts
++++ b/apps/studio/data/custom-domains/custom-domains-query.ts
+@@ -1,7 +1,6 @@
+ import { useQuery, UseQueryOptions } from '@tanstack/react-query'
+ 
+ import { get, handleError } from 'data/fetchers'
+-import { IS_PLATFORM } from 'lib/constants'
+ import type { ResponseError } from 'types'
+ import { customDomainKeys } from './keys'
+ 
+@@ -109,5 +108,5 @@ export const useCustomDomainsQuery = <TData = CustomDomainsData>(
+   useQuery<CustomDomainsData, CustomDomainsError, TData>(
+     customDomainKeys.list(projectRef),
+     ({ signal }) => getCustomDomains({ projectRef }, signal),
+-    { enabled: enabled && IS_PLATFORM && typeof projectRef !== 'undefined', ...options }
++    { enabled: enabled && typeof projectRef !== 'undefined', ...options }
+   )
+diff --git a/apps/studio/data/edge-functions/edge-function-query.ts b/apps/studio/data/edge-functions/edge-function-query.ts
+index fe8d0c0..72a1d8e 100644
+--- a/apps/studio/data/edge-functions/edge-function-query.ts
++++ b/apps/studio/data/edge-functions/edge-function-query.ts
+@@ -1,6 +1,6 @@
+ import { useQuery, UseQueryOptions } from '@tanstack/react-query'
+ import { get } from 'lib/common/fetch'
+-import { API_ADMIN_URL, IS_PLATFORM } from 'lib/constants'
++import { API_ADMIN_URL } from 'lib/constants'
+ import { edgeFunctionsKeys } from './keys'
+ 
+ export type EdgeFunctionVariables = {
+@@ -46,8 +46,7 @@ export const useEdgeFunctionQuery = <TData = EdgeFunctionData>(
+     edgeFunctionsKeys.detail(projectRef, slug),
+     ({ signal }) => getEdgeFunction({ projectRef, slug }, signal),
+     {
+-      enabled:
+-        IS_PLATFORM && enabled && typeof projectRef !== 'undefined' && typeof slug !== 'undefined',
++      enabled: enabled && typeof projectRef !== 'undefined' && typeof slug !== 'undefined',
+       ...options,
+     }
+   )
+diff --git a/apps/studio/data/edge-functions/edge-functions-query.ts b/apps/studio/data/edge-functions/edge-functions-query.ts
+index 6792b10..7726811 100644
+--- a/apps/studio/data/edge-functions/edge-functions-query.ts
++++ b/apps/studio/data/edge-functions/edge-functions-query.ts
+@@ -1,6 +1,6 @@
+ import { useQuery, UseQueryOptions } from '@tanstack/react-query'
+ import { get } from 'lib/common/fetch'
+-import { API_ADMIN_URL, IS_PLATFORM } from 'lib/constants'
++import { API_ADMIN_URL } from 'lib/constants'
+ import { edgeFunctionsKeys } from './keys'
+ import type { ResponseError } from 'types'
+ 
+@@ -41,5 +41,5 @@ export const useEdgeFunctionsQuery = <TData = EdgeFunctionsData>(
+   useQuery<EdgeFunctionsData, EdgeFunctionsError, TData>(
+     edgeFunctionsKeys.list(projectRef),
+     ({ signal }) => getEdgeFunctions({ projectRef }, signal),
+-    { enabled: IS_PLATFORM && enabled && typeof projectRef !== 'undefined', ...options }
++    { enabled: enabled && typeof projectRef !== 'undefined', ...options }
+   )
+diff --git a/apps/studio/data/fetchers.ts b/apps/studio/data/fetchers.ts
+index 88df2a9..486ef9d 100644
+--- a/apps/studio/data/fetchers.ts
++++ b/apps/studio/data/fetchers.ts
+@@ -1,4 +1,4 @@
+-import { API_URL, IS_PLATFORM } from 'lib/constants'
++import { API_URL } from 'lib/constants'
+ import { getAccessToken } from 'lib/gotrue'
+ import { uuidv4 } from 'lib/helpers'
+ import createClient from 'openapi-fetch'
+@@ -45,12 +45,6 @@ export async function constructHeaders(headersInit?: HeadersInit | undefined) {
+ export const get: typeof _get = async (url, init) => {
+   const headers = await constructHeaders(init?.headers)
+ 
+-  // on self-hosted, we don't have a /platform prefix
+-  if (!IS_PLATFORM && url.startsWith('/platform')) {
+-    // @ts-ignore
+-    url = url.replace('/platform', '')
+-  }
+-
+   return await _get(url, {
+     ...init,
+     headers,
+@@ -60,12 +54,6 @@ export const get: typeof _get = async (url, init) => {
+ export const post: typeof _post = async (url, init) => {
+   const headers = await constructHeaders(init?.headers)
+ 
+-  // on self-hosted, we don't have a /platform prefix
+-  if (!IS_PLATFORM && url.startsWith('/platform')) {
+-    // @ts-ignore
+-    url = url.replace('/platform', '')
+-  }
+-
+   return await _post(url, {
+     ...init,
+     headers,
+@@ -75,12 +63,6 @@ export const post: typeof _post = async (url, init) => {
+ export const put: typeof _put = async (url, init) => {
+   const headers = await constructHeaders(init?.headers)
+ 
+-  // on self-hosted, we don't have a /platform prefix
+-  if (!IS_PLATFORM && url.startsWith('/platform')) {
+-    // @ts-ignore
+-    url = url.replace('/platform', '')
+-  }
+-
+   return await _put(url, {
+     ...init,
+     headers,
+@@ -90,12 +72,6 @@ export const put: typeof _put = async (url, init) => {
+ export const patch: typeof _patch = async (url, init) => {
+   const headers = await constructHeaders(init?.headers)
+ 
+-  // on self-hosted, we don't have a /platform prefix
+-  if (!IS_PLATFORM && url.startsWith('/platform')) {
+-    // @ts-ignore
+-    url = url.replace('/platform', '')
+-  }
+-
+   return await _patch(url, {
+     ...init,
+     headers,
+@@ -105,12 +81,6 @@ export const patch: typeof _patch = async (url, init) => {
+ export const del: typeof _del = async (url, init) => {
+   const headers = await constructHeaders(init?.headers)
+ 
+-  // on self-hosted, we don't have a /platform prefix
+-  if (!IS_PLATFORM && url.startsWith('/platform')) {
+-    // @ts-ignore
+-    url = url.replace('/platform', '')
+-  }
+-
+   return await _del(url, {
+     ...init,
+     headers,
+@@ -120,12 +90,6 @@ export const del: typeof _del = async (url, init) => {
+ export const head: typeof _head = async (url, init) => {
+   const headers = await constructHeaders(init?.headers)
+ 
+-  // on self-hosted, we don't have a /platform prefix
+-  if (!IS_PLATFORM && url.startsWith('/platform')) {
+-    // @ts-ignore
+-    url = url.replace('/platform', '')
+-  }
+-
+   return await _head(url, {
+     ...init,
+     headers,
+diff --git a/apps/studio/data/permissions/permissions-query.ts b/apps/studio/data/permissions/permissions-query.ts
+index e247de4..b668077 100644
+--- a/apps/studio/data/permissions/permissions-query.ts
++++ b/apps/studio/data/permissions/permissions-query.ts
+@@ -1,7 +1,7 @@
+ import { useQuery, UseQueryOptions } from '@tanstack/react-query'
+ 
+ import { get } from 'lib/common/fetch'
+-import { API_URL, IS_PLATFORM } from 'lib/constants'
++import { API_URL } from 'lib/constants'
+ import type { Permission, ResponseError } from 'types'
+ import { permissionKeys } from './keys'
+ 
+@@ -27,7 +27,7 @@ export const usePermissionsQuery = <TData = PermissionsData>(
+     ({ signal }) => getPermissions(signal),
+     {
+       ...options,
+-      enabled: IS_PLATFORM && options.enabled,
++      enabled: options.enabled,
+       staleTime: 30 * 60 * 1000,
+     }
+   )
+diff --git a/apps/studio/data/profile/profile-query.ts b/apps/studio/data/profile/profile-query.ts
+index 1a536b7..f5829dc 100644
+--- a/apps/studio/data/profile/profile-query.ts
++++ b/apps/studio/data/profile/profile-query.ts
+@@ -1,7 +1,7 @@
+ import { useQuery, UseQueryOptions } from '@tanstack/react-query'
+ 
+ import { get } from 'lib/common/fetch'
+-import { API_URL, IS_PLATFORM } from 'lib/constants'
++import { API_URL } from 'lib/constants'
+ import type { ResponseError } from 'types'
+ import { profileKeys } from './keys'
+ import type { Profile } from './types'
+@@ -15,10 +15,6 @@ export async function getProfile(signal?: AbortSignal) {
+   })
+   if (response.error) throw response.error
+ 
+-  if (!IS_PLATFORM) {
+-    response.disabled_features = process.env.NEXT_PUBLIC_DISABLED_FEATURES?.split(',') ?? []
+-  }
+-
+   return response as ProfileResponse
+ }
+ 
+diff --git a/apps/studio/data/query-client.ts b/apps/studio/data/query-client.ts
+index ef40705..871f550 100644
+--- a/apps/studio/data/query-client.ts
++++ b/apps/studio/data/query-client.ts
+@@ -1,13 +1,6 @@
+ import { QueryClient, onlineManager } from '@tanstack/react-query'
+-import { IS_PLATFORM } from 'lib/constants'
+ import { useState } from 'react'
+ 
+-// When running locally we don't need the internet
+-// so we can pretend we're online all the time
+-if (!IS_PLATFORM) {
+-  onlineManager.setOnline(true)
+-}
+-
+ let queryClient: QueryClient | undefined
+ 
+ export function getQueryClient() {
+diff --git a/apps/studio/data/read-replicas/replicas-query.ts b/apps/studio/data/read-replicas/replicas-query.ts
+index afc080a..545f17b 100644
+--- a/apps/studio/data/read-replicas/replicas-query.ts
++++ b/apps/studio/data/read-replicas/replicas-query.ts
+@@ -5,7 +5,6 @@ import { get } from 'data/fetchers'
+ import { useProjectDetailQuery } from 'data/projects/project-detail-query'
+ import type { ResponseError } from 'types'
+ import { replicaKeys } from './keys'
+-import { IS_PLATFORM } from 'common'
+ 
+ export type ReadReplicasVariables = {
+   projectRef?: string
+@@ -38,11 +37,7 @@ export const useReadReplicasQuery = <TData = ReadReplicasData>(
+     replicaKeys.list(projectRef),
+     ({ signal }) => getReadReplicas({ projectRef }, signal),
+     {
+-      enabled:
+-        enabled &&
+-        IS_PLATFORM &&
+-        data?.is_read_replicas_enabled &&
+-        typeof projectRef !== 'undefined',
++      enabled: enabled && data?.is_read_replicas_enabled && typeof projectRef !== 'undefined',
+       ...options,
+     }
+   )
+diff --git a/apps/studio/data/table-rows/table-rows-query.ts b/apps/studio/data/table-rows/table-rows-query.ts
+index 879d4c8..2742b3e 100644
+--- a/apps/studio/data/table-rows/table-rows-query.ts
++++ b/apps/studio/data/table-rows/table-rows-query.ts
+@@ -1,6 +1,5 @@
+ import type { QueryKey, UseQueryOptions } from '@tanstack/react-query'
+ 
+-import { IS_PLATFORM } from 'common'
+ import { Filter, Query, Sort, SupaRow, SupaTable } from 'components/grid'
+ import {
+   ImpersonationRole,
+@@ -36,7 +35,7 @@ export const fetchAllTableRows = async ({
+   sorts?: Sort[]
+   impersonatedRole?: ImpersonationRole
+ }) => {
+-  if (IS_PLATFORM && !connectionString) {
++  if (!connectionString) {
+     console.error('Connection string is required')
+     return []
+   }
+diff --git a/apps/studio/data/usage/resource-warnings-query.ts b/apps/studio/data/usage/resource-warnings-query.ts
+index 78817a1..32757b9 100644
+--- a/apps/studio/data/usage/resource-warnings-query.ts
++++ b/apps/studio/data/usage/resource-warnings-query.ts
+@@ -4,7 +4,6 @@ import { get } from 'data/fetchers'
+ import { usageKeys } from './keys'
+ import type { ResponseError } from 'types'
+ import type { components } from 'data/api'
+-import { IS_PLATFORM } from 'common'
+ 
+ export async function getResourceWarnings(signal?: AbortSignal) {
+   const { data, error } = await get(`/platform/projects-resource-warnings`, { signal })
+@@ -25,7 +24,7 @@ export const useResourceWarningsQuery = <TData = ResourceWarningsData>({
+     usageKeys.resourceWarnings(),
+     ({ signal }) => getResourceWarnings(signal),
+     {
+-      enabled: IS_PLATFORM && enabled,
++      enabled,
+       staleTime: 1000 * 60 * 30, // default 30 minutes
+       ...options,
+     }
+diff --git a/apps/studio/hooks/misc/useCheckPermissions.ts b/apps/studio/hooks/misc/useCheckPermissions.ts
+index b889835..b544d9c 100644
+--- a/apps/studio/hooks/misc/useCheckPermissions.ts
++++ b/apps/studio/hooks/misc/useCheckPermissions.ts
+@@ -3,7 +3,6 @@ import jsonLogic from 'json-logic-js'
+ 
+ import { useOrganizationsQuery } from 'data/organizations/organizations-query'
+ import { usePermissionsQuery } from 'data/permissions/permissions-query'
+-import { IS_PLATFORM } from 'lib/constants'
+ import type { Permission } from 'types'
+ import { useSelectedOrganization } from './useSelectedOrganization'
+ 
+@@ -78,7 +77,6 @@ export function useCheckPermissions(
+   )
+ 
+   if (!isLoggedIn) return false
+-  if (!IS_PLATFORM) return true
+ 
+   return doPermissionsCheck(allPermissions, action, resource, data, orgId)
+ }
+@@ -88,7 +86,5 @@ export function usePermissionsLoaded() {
+   const { isFetched: isPermissionsFetched } = usePermissionsQuery({ enabled: isLoggedIn })
+   const { isFetched: isOrganizationsFetched } = useOrganizationsQuery({ enabled: isLoggedIn })
+ 
+-  if (!IS_PLATFORM) return true
+-
+   return isLoggedIn && isPermissionsFetched && isOrganizationsFetched
+ }
+diff --git a/apps/studio/hooks/misc/withAuth.tsx b/apps/studio/hooks/misc/withAuth.tsx
+index da864ed..2978f4c 100644
+--- a/apps/studio/hooks/misc/withAuth.tsx
++++ b/apps/studio/hooks/misc/withAuth.tsx
+@@ -5,7 +5,6 @@ import toast from 'react-hot-toast'
+ import { usePermissionsQuery } from 'data/permissions/permissions-query'
+ import { useAuthenticatorAssuranceLevelQuery } from 'data/profile/mfa-authenticator-assurance-level-query'
+ import { useAuth } from 'lib/auth'
+-import { IS_PLATFORM } from 'lib/constants'
+ import { NextPageWithLayout, isNextPageWithLayout } from 'types'
+ 
+ export function withAuth<T>(
+@@ -22,11 +21,6 @@ export function withAuth<T>(
+     useHighestAAL: boolean
+   } = { useHighestAAL: true }
+ ) {
+-  // ignore auth in self-hosted
+-  if (!IS_PLATFORM) {
+-    return WrappedComponent
+-  }
+-
+   const WithAuthHOC: ComponentType<T> = (props) => {
+     const router = useRouter()
+     const { isLoading, session } = useAuth()
+diff --git a/apps/studio/lib/api/apiHelpers.ts b/apps/studio/lib/api/apiHelpers.ts
+index e361cd0..0f1dd32 100644
+--- a/apps/studio/lib/api/apiHelpers.ts
++++ b/apps/studio/lib/api/apiHelpers.ts
+@@ -1,5 +1,4 @@
+ import { snakeCase } from 'lodash'
+-import { IS_PLATFORM } from 'lib/constants'
+ 
+ /**
+  * Construct headers for api request.
+@@ -22,9 +21,7 @@ export function constructHeaders(headers: { [prop: string]: any }) {
+     )
+     return {
+       ...cleansedHeaders,
+-      ...(IS_PLATFORM
+-        ? { apiKey: `${process.env.READ_ONLY_API_KEY}` }
+-        : { apiKey: `${process.env.SUPABASE_SERVICE_KEY}` }),
++      ...{ apiKey: `${process.env.READ_ONLY_API_KEY}` },
+     }
+   } else {
+     return {
+diff --git a/apps/studio/lib/api/apiWrapper.ts b/apps/studio/lib/api/apiWrapper.ts
+index a0deb51..e7e737e 100644
+--- a/apps/studio/lib/api/apiWrapper.ts
++++ b/apps/studio/lib/api/apiWrapper.ts
+@@ -1,7 +1,6 @@
+ import { withSentry } from '@sentry/nextjs'
+ import { isResponseOk } from 'lib/common/fetch'
+ import type { NextApiHandler, NextApiRequest, NextApiResponse } from 'next'
+-import { IS_PLATFORM } from '../constants'
+ import { apiAuthenticate } from './apiAuthenticate'
+ 
+ // Purpose of this apiWrapper is to function like a global catchall for ANY errors
+@@ -16,7 +15,7 @@ export default async function apiWrapper(
+   try {
+     const { withAuth } = options || {}
+ 
+-    if (IS_PLATFORM && withAuth) {
++    if (withAuth) {
+       const response = await apiAuthenticate(req, res)
+       if (!isResponseOk(response)) {
+         return res.status(401).json({
+diff --git a/apps/studio/lib/api/supabaseClient.ts b/apps/studio/lib/api/supabaseClient.ts
+index 16d1ddb..94344f7 100644
+--- a/apps/studio/lib/api/supabaseClient.ts
++++ b/apps/studio/lib/api/supabaseClient.ts
+@@ -1,26 +1,23 @@
+ import { createClient } from '@supabase/supabase-js'
+-import { IS_PLATFORM } from '../constants'
+ 
+ let readOnly: any
+ 
+-if (IS_PLATFORM) {
+-  readOnly = createClient(process.env.READ_ONLY_URL ?? '', process.env.READ_ONLY_API_KEY ?? '')
+-  const readOnlyErrMessage = Error('This client is for read-only actions. Use readWrite instead.')
++readOnly = createClient(process.env.READ_ONLY_URL ?? '', process.env.READ_ONLY_API_KEY ?? '')
++const readOnlyErrMessage = Error('This client is for read-only actions. Use readWrite instead.')
+ 
+-  // overwrites function calls
+-  // for readOnly
+-  readOnly.from('').insert = () => {
+-    throw readOnlyErrMessage
+-  }
+-  readOnly.from('').delete = () => {
+-    throw readOnlyErrMessage
+-  }
+-  readOnly.from('').update = () => {
+-    throw readOnlyErrMessage
+-  }
+-  readOnly.rpc = () => {
+-    throw readOnlyErrMessage
+-  }
++// overwrites function calls
++// for readOnly
++readOnly.from('').insert = () => {
++  throw readOnlyErrMessage
++}
++readOnly.from('').delete = () => {
++  throw readOnlyErrMessage
++}
++readOnly.from('').update = () => {
++  throw readOnlyErrMessage
++}
++readOnly.rpc = () => {
++  throw readOnlyErrMessage
+ }
+ 
+ export { readOnly }
+diff --git a/apps/studio/lib/auth.tsx b/apps/studio/lib/auth.tsx
+index a51c975..b89ddfe 100644
+--- a/apps/studio/lib/auth.tsx
++++ b/apps/studio/lib/auth.tsx
+@@ -3,7 +3,7 @@ import { AuthProvider as AuthProviderInternal, gotrueClient } from 'common'
+ import { PropsWithChildren, useCallback, useEffect } from 'react'
+ import toast from 'react-hot-toast'
+ 
+-import { GOTRUE_ERRORS, IS_PLATFORM } from './constants'
++import { GOTRUE_ERRORS } from './constants'
+ import { clearLocalStorage } from './local-storage'
+ 
+ export const AuthProvider = ({ children }: PropsWithChildren<{}>) => {
+@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }: PropsWithChildren<{}>) => {
+     handleEmailVerificationError()
+   }, [])
+ 
+-  return <AuthProviderInternal alwaysLoggedIn={!IS_PLATFORM}>{children}</AuthProviderInternal>
++  return <AuthProviderInternal alwaysLoggedIn={false}>{children}</AuthProviderInternal>
+ }
+ 
+ export { useAuth, useIsLoggedIn, useSession, useUser } from 'common'
+diff --git a/apps/studio/lib/constants/index.ts b/apps/studio/lib/constants/index.ts
+index 0e55cf6..8b15cf0 100644
+--- a/apps/studio/lib/constants/index.ts
++++ b/apps/studio/lib/constants/index.ts
+@@ -1,12 +1,9 @@
+ export * from './infrastructure'
+ 
+-export const IS_PLATFORM = process.env.NEXT_PUBLIC_IS_PLATFORM === 'true'
+-export const DEFAULT_HOME = IS_PLATFORM ? '/projects' : '/project/default'
+-export const API_URL = IS_PLATFORM ? process.env.NEXT_PUBLIC_API_URL : '/api'
+-export const API_ADMIN_URL = IS_PLATFORM ? process.env.NEXT_PUBLIC_API_ADMIN_URL : undefined
+-export const PG_META_URL = IS_PLATFORM
+-  ? process.env.PLATFORM_PG_META_URL
+-  : process.env.STUDIO_PG_META_URL
++export const DEFAULT_HOME = '/projects'
++export const API_URL = process.env.NEXT_PUBLIC_API_URL
++export const API_ADMIN_URL = process.env.NEXT_PUBLIC_API_ADMIN_URL
++export const PG_META_URL = process.env.PLATFORM_PG_META_URL
+ export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
+ 
+ /**
+diff --git a/apps/studio/lib/telemetry.ts b/apps/studio/lib/telemetry.ts
+index 38f8c98..9afbdca 100644
+--- a/apps/studio/lib/telemetry.ts
++++ b/apps/studio/lib/telemetry.ts
+@@ -1,5 +1,5 @@
+ import { post } from 'lib/common/fetch'
+-import { API_URL, IS_PLATFORM, LOCAL_STORAGE_KEYS } from 'lib/constants'
++import { API_URL, LOCAL_STORAGE_KEYS } from 'lib/constants'
+ import type { NextRouter } from 'next/router'
+ import type { User } from 'types'
+ 
+@@ -21,8 +21,6 @@ const sendEvent = (
+   gaProps: TelemetryProps,
+   router: NextRouter
+ ) => {
+-  if (!IS_PLATFORM) return
+-
+   const consent =
+     typeof window !== 'undefined'
+       ? localStorage.getItem(LOCAL_STORAGE_KEYS.TELEMETRY_CONSENT)
+@@ -56,8 +54,6 @@ const sendEvent = (
+  * We may or may not need gaClientId here. Confirm later
+  */
+ const sendIdentify = (user: User, gaProps?: TelemetryProps) => {
+-  if (!IS_PLATFORM) return
+-
+   const consent =
+     typeof window !== 'undefined'
+       ? localStorage.getItem(LOCAL_STORAGE_KEYS.TELEMETRY_CONSENT)
+@@ -86,8 +82,6 @@ const sendActivity = (
+   },
+   router: NextRouter
+ ) => {
+-  if (!IS_PLATFORM) return
+-
+   const consent =
+     typeof window !== 'undefined'
+       ? localStorage.getItem(LOCAL_STORAGE_KEYS.TELEMETRY_CONSENT)
+diff --git a/apps/studio/localStores/storageExplorer/StorageExplorerStore.tsx b/apps/studio/localStores/storageExplorer/StorageExplorerStore.tsx
+index 1c09979..11a9e47 100644
+--- a/apps/studio/localStores/storageExplorer/StorageExplorerStore.tsx
++++ b/apps/studio/localStores/storageExplorer/StorageExplorerStore.tsx
+@@ -18,7 +18,7 @@ import { configKeys } from 'data/config/keys'
+ import { ProjectStorageConfigResponse } from 'data/config/project-storage-config-query'
+ import { getQueryClient } from 'data/query-client'
+ import { delete_, post } from 'lib/common/fetch'
+-import { API_URL, IS_PLATFORM } from 'lib/constants'
++import { API_URL } from 'lib/constants'
+ import { PROJECT_ENDPOINT_PROTOCOL } from 'pages/api/constants'
+ 
+ /**
+@@ -95,25 +95,21 @@ class StorageExplorerStore {
+   /* Methods which are commonly used + For better readability */
+ 
+   initializeSupabaseClient = (serviceKey, serviceEndpoint, protocol) => {
+-    this.supabaseClient = createClient(
+-      `${IS_PLATFORM ? 'https' : protocol}://${serviceEndpoint}`,
+-      serviceKey,
+-      {
+-        auth: {
+-          persistSession: false,
+-          autoRefreshToken: false,
+-          multiTab: false,
+-          detectSessionInUrl: false,
+-          localStorage: {
+-            getItem: (key) => {
+-              return undefined
+-            },
+-            setItem: (key, value) => {},
+-            removeItem: (key) => {},
++    this.supabaseClient = createClient(`https://${serviceEndpoint}`, serviceKey, {
++      auth: {
++        persistSession: false,
++        autoRefreshToken: false,
++        multiTab: false,
++        detectSessionInUrl: false,
++        localStorage: {
++          getItem: (key) => {
++            return undefined
+           },
++          setItem: (key, value) => {},
++          removeItem: (key) => {},
+         },
+-      }
+-    )
++      },
++    })
+   }
+ 
+   updateFileInPreviewCache = (fileCache) => {
+diff --git a/apps/studio/next.config.js b/apps/studio/next.config.js
+index 36442f4..ccee308 100644
+--- a/apps/studio/next.config.js
++++ b/apps/studio/next.config.js
+@@ -85,10 +85,6 @@ const csp = [
+   `form-action 'self';`,
+   `frame-ancestors 'none';`,
+   `block-all-mixed-content;`,
+-  ...(process.env.NEXT_PUBLIC_IS_PLATFORM === 'true' &&
+-  process.env.NEXT_PUBLIC_ENVIRONMENT === 'prod'
+-    ? [`upgrade-insecure-requests;`]
+-    : []),
+ ].join(' ')
+ 
+ /**
+@@ -104,83 +100,48 @@ const nextConfig = {
+   },
+   async redirects() {
+     return [
+-      ...(process.env.NEXT_PUBLIC_IS_PLATFORM === 'true'
+-        ? [
+-            {
+-              source: '/',
+-              has: [
+-                {
+-                  type: 'query',
+-                  key: 'next',
+-                  value: 'new-project',
+-                },
+-              ],
+-              destination: '/new/new-project',
+-              permanent: false,
+-            },
+-            {
+-              source: '/',
+-              destination: '/projects',
+-              permanent: false,
+-            },
+-            {
+-              source: '/register',
+-              destination: '/sign-up',
+-              permanent: false,
+-            },
+-            {
+-              source: '/signup',
+-              destination: '/sign-up',
+-              permanent: false,
+-            },
+-            {
+-              source: '/signin',
+-              destination: '/sign-in',
+-              permanent: false,
+-            },
+-            {
+-              source: '/login',
+-              destination: '/sign-in',
+-              permanent: false,
+-            },
+-            {
+-              source: '/log-in',
+-              destination: '/sign-in',
+-              permanent: false,
+-            },
+-          ]
+-        : [
+-            {
+-              source: '/',
+-              destination: '/project/default',
+-              permanent: false,
+-            },
+-            {
+-              source: '/register',
+-              destination: '/project/default',
+-              permanent: false,
+-            },
+-            {
+-              source: '/signup',
+-              destination: '/project/default',
+-              permanent: false,
+-            },
+-            {
+-              source: '/signin',
+-              destination: '/project/default',
+-              permanent: false,
+-            },
+-            {
+-              source: '/login',
+-              destination: '/project/default',
+-              permanent: false,
+-            },
+-            {
+-              source: '/log-in',
+-              destination: '/project/default',
+-              permanent: false,
+-            },
+-          ]),
++      {
++        source: '/',
++        has: [
++          {
++            type: 'query',
++            key: 'next',
++            value: 'new-project',
++          },
++        ],
++        destination: '/new/new-project',
++        permanent: false,
++      },
++      {
++        source: '/',
++        destination: '/projects',
++        permanent: false,
++      },
++      {
++        source: '/register',
++        destination: '/sign-up',
++        permanent: false,
++      },
++      {
++        source: '/signup',
++        destination: '/sign-up',
++        permanent: false,
++      },
++      {
++        source: '/signin',
++        destination: '/sign-in',
++        permanent: false,
++      },
++      {
++        source: '/login',
++        destination: '/sign-in',
++        permanent: false,
++      },
++      {
++        source: '/log-in',
++        destination: '/sign-in',
++        permanent: false,
++      },
+       {
+         source: '/project/:ref/auth',
+         destination: '/project/:ref/auth/users',
+@@ -401,7 +362,7 @@ const nextConfig = {
+           },
+           {
+             key: 'Content-Security-Policy',
+-            value: process.env.NEXT_PUBLIC_IS_PLATFORM === 'true' ? csp : "frame-ancestors 'none';",
++            value: "frame-ancestors 'none';",
+           },
+           {
+             key: 'Referrer-Policy',
+@@ -449,34 +410,4 @@ const nextConfig = {
+   },
+ }
+ 
+-// module.exports = withBundleAnalyzer(nextConfig)
+-// Make sure adding Sentry options is the last code to run before exporting, to
+-// ensure that your source maps include changes from all other Webpack plugins
+-module.exports =
+-  process.env.NEXT_PUBLIC_IS_PLATFORM === 'true'
+-    ? withSentryConfig(
+-        withBundleAnalyzer(nextConfig),
+-        {
+-          silent: true,
+-        },
+-        {
+-          // For all available options, see:
+-          // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+-
+-          // Upload a larger set of source maps for prettier stack traces (increases build time)
+-          widenClientFileUpload: true,
+-
+-          // Transpiles SDK to be compatible with IE11 (increases bundle size)
+-          transpileClientSDK: false,
+-
+-          // Routes browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers (increases server load)
+-          tunnelRoute: '/monitoring',
+-
+-          // Hides source maps from generated client bundles
+-          hideSourceMaps: true,
+-
+-          // Automatically tree-shake Sentry logger statements to reduce bundle size
+-          disableLogger: true,
+-        }
+-      )
+-    : nextConfig
++module.exports = nextConfig
+diff --git a/apps/studio/pages/_app.tsx b/apps/studio/pages/_app.tsx
+index 87cf59b..5e00cee 100644
+--- a/apps/studio/pages/_app.tsx
++++ b/apps/studio/pages/_app.tsx
+@@ -47,7 +47,7 @@ import FlagProvider from 'components/ui/Flag/FlagProvider'
+ import PageTelemetry from 'components/ui/PageTelemetry'
+ import { useRootQueryClient } from 'data/query-client'
+ import { AuthProvider } from 'lib/auth'
+-import { BASE_PATH, IS_PLATFORM, LOCAL_STORAGE_KEYS } from 'lib/constants'
++import { BASE_PATH, LOCAL_STORAGE_KEYS } from 'lib/constants'
+ import { ProfileProvider } from 'lib/profile'
+ import { useAppStateSnapshot } from 'state/app-state'
+ import HCaptchaLoadedStore from 'stores/hcaptcha-loaded-store'
+@@ -65,9 +65,7 @@ loader.config({
+   // use cloudflare or find some way to pull all the files from a CDN via a CLI, rather than tracking individual files
+   // The alternative was to import * as monaco from 'monaco-editor' but i couldn't get it working
+   paths: {
+-    vs: IS_PLATFORM
+-      ? 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.37.0/min/vs'
+-      : `${BASE_PATH}/monaco-editor`,
++    vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.37.0/min/vs',
+   },
+ })
+ 
+@@ -83,12 +81,10 @@ function CustomApp({ Component, pageProps }: AppPropsWithLayout) {
+ 
+   // [Joshen] Some issues with using createBrowserSupabaseClient
+   const [supabase] = useState(() =>
+-    IS_PLATFORM
+-      ? createClient(
+-          process.env.NEXT_PUBLIC_SUPABASE_URL as string,
+-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
+-        )
+-      : undefined
++    createClient(
++      process.env.NEXT_PUBLIC_SUPABASE_URL as string,
++      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
++    )
+   )
+ 
+   const getLayout = Component.getLayout ?? ((page) => page)
+@@ -96,12 +92,10 @@ function CustomApp({ Component, pageProps }: AppPropsWithLayout) {
+   const AuthContainer = useMemo(
+     // eslint-disable-next-line react/display-name
+     () => (props: any) => {
+-      return IS_PLATFORM ? (
++      return (
+         <SessionContextProvider supabaseClient={supabase as any}>
+           <AuthProvider>{props.children}</AuthProvider>
+         </SessionContextProvider>
+-      ) : (
+-        <AuthProvider>{props.children}</AuthProvider>
+       )
+     },
+     [supabase]
+@@ -121,7 +115,7 @@ function CustomApp({ Component, pageProps }: AppPropsWithLayout) {
+       }
+ 
+       const hasAcknowledgedConsent = localStorage.getItem(LOCAL_STORAGE_KEYS.TELEMETRY_CONSENT)
+-      if (IS_PLATFORM && hasAcknowledgedConsent === null) {
++      if (hasAcknowledgedConsent === null) {
+         consentToastId.current = toast(
+           <ConsentToast onAccept={onAcceptConsent} onOptOut={onOptOut} />,
+           {
+diff --git a/apps/studio/pages/_document.tsx b/apps/studio/pages/_document.tsx
+index 72fe343..f2ebe28 100644
+--- a/apps/studio/pages/_document.tsx
++++ b/apps/studio/pages/_document.tsx
+@@ -1,5 +1,5 @@
+ /* eslint-disable @next/next/no-css-tags */
+-import { BASE_PATH, IS_PLATFORM } from 'lib/constants'
++import { BASE_PATH } from 'lib/constants'
+ import Document, { DocumentContext, Head, Html, Main, NextScript } from 'next/document'
+ 
+ class MyDocument extends Document {
+@@ -19,9 +19,7 @@ class MyDocument extends Document {
+             type="text/css"
+             data-name="vs/editor/editor.main"
+             href={
+-              IS_PLATFORM
+-                ? 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.37.0/min/vs/editor/editor.main.css'
+-                : `${BASE_PATH}/monaco-editor/editor/editor.main.css`
++              'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.37.0/min/vs/editor/editor.main.css'
+             }
+           />
+           <link rel="stylesheet" type="text/css" href={`${BASE_PATH}/css/fonts.css`} />
+diff --git a/apps/studio/pages/project/[ref]/api/graphiql.tsx b/apps/studio/pages/project/[ref]/api/graphiql.tsx
+index a39f8ae..08240f7 100644
+--- a/apps/studio/pages/project/[ref]/api/graphiql.tsx
++++ b/apps/studio/pages/project/[ref]/api/graphiql.tsx
+@@ -14,7 +14,7 @@ import { useSessionAccessTokenQuery } from 'data/auth/session-access-token-query
+ import { useProjectApiQuery } from 'data/config/project-api-query'
+ import { useProjectPostgrestConfigQuery } from 'data/config/project-postgrest-config-query'
+ import { useDatabaseExtensionsQuery } from 'data/database-extensions/database-extensions-query'
+-import { API_URL, IS_PLATFORM } from 'lib/constants'
++import { API_URL } from 'lib/constants'
+ import { getRoleImpersonationJWT } from 'lib/role-impersonation'
+ import { useGetImpersonatedRole } from 'state/role-impersonation-state'
+ import type { NextPageWithLayout } from 'types'
+@@ -31,7 +31,7 @@ const GraphiQLPage: NextPageWithLayout = () => {
+   })
+   const pgGraphqlExtension = (data ?? []).find((ext) => ext.name === 'pg_graphql')
+ 
+-  const { data: accessToken } = useSessionAccessTokenQuery({ enabled: IS_PLATFORM })
++  const { data: accessToken } = useSessionAccessTokenQuery({ enabled: true })
+   const { data: settings, isFetched } = useProjectApiQuery({ projectRef })
+ 
+   const apiService = settings?.autoApiService
+@@ -84,7 +84,7 @@ const GraphiQLPage: NextPageWithLayout = () => {
+     return customFetcher
+   }, [projectRef, getImpersonatedRole, jwtSecret, accessToken, serviceRoleKey])
+ 
+-  if ((IS_PLATFORM && !accessToken) || !isFetched || (isExtensionsLoading && !pgGraphqlExtension)) {
++  if (!accessToken || !isFetched || (isExtensionsLoading && !pgGraphqlExtension)) {
+     return <Loading />
+   }
+ 
+diff --git a/apps/studio/pages/project/[ref]/index.tsx b/apps/studio/pages/project/[ref]/index.tsx
+index 2e6b233..cdff6b7 100644
+--- a/apps/studio/pages/project/[ref]/index.tsx
++++ b/apps/studio/pages/project/[ref]/index.tsx
+@@ -10,7 +10,7 @@ import { ProjectLayoutWithAuth } from 'components/layouts/ProjectLayout/ProjectL
+ import ProjectPausedState from 'components/layouts/ProjectLayout/ProjectPausedState'
+ import ProjectUpgradeFailedBanner from 'components/ui/ProjectUpgradeFailedBanner'
+ import { useSelectedProject } from 'hooks'
+-import { IS_PLATFORM, PROJECT_STATUS } from 'lib/constants'
++import { PROJECT_STATUS } from 'lib/constants'
+ import { useAppStateSnapshot } from 'state/app-state'
+ import type { NextPageWithLayout } from 'types'
+ 
+@@ -39,8 +39,8 @@ const Home: NextPageWithLayout = () => {
+       <div className="flex items-center justify-between mx-6 space-x-6">
+         <h1 className="text-3xl">{projectName}</h1>
+         <div className="flex items-center gap-x-3">
+-          {IS_PLATFORM && project?.status === PROJECT_STATUS.ACTIVE_HEALTHY && <ServiceStatus />}
+-          {IS_PLATFORM && project?.status === PROJECT_STATUS.ACTIVE_HEALTHY && <Connect />}
++          {project?.status === PROJECT_STATUS.ACTIVE_HEALTHY && <ServiceStatus />}
++          {project?.status === PROJECT_STATUS.ACTIVE_HEALTHY && <Connect />}
+         </div>
+       </div>
+ 
+@@ -51,7 +51,7 @@ const Home: NextPageWithLayout = () => {
+       {project?.status === PROJECT_STATUS.INACTIVE && <ProjectPausedState />}
+ 
+       <div className="mx-6">
+-        {IS_PLATFORM && project?.status !== PROJECT_STATUS.INACTIVE && <ProjectUsageSection />}
++        {project?.status !== PROJECT_STATUS.INACTIVE && <ProjectUsageSection />}
+       </div>
+ 
+       {project?.status !== PROJECT_STATUS.INACTIVE && (
+diff --git a/apps/studio/pages/projects.tsx b/apps/studio/pages/projects.tsx
+index 9a2fc52..5b6e08f 100644
+--- a/apps/studio/pages/projects.tsx
++++ b/apps/studio/pages/projects.tsx
+@@ -9,7 +9,7 @@ import { Loading } from 'components/ui/Loading'
+ import { useOrganizationsQuery } from 'data/organizations/organizations-query'
+ import { useAutoProjectsPrefetch } from 'data/projects/projects-query'
+ import { useFlag, useIsFeatureEnabled } from 'hooks'
+-import { IS_PLATFORM, LOCAL_STORAGE_KEYS } from 'lib/constants'
++import { LOCAL_STORAGE_KEYS } from 'lib/constants'
+ import type { NextPageWithLayout } from 'types'
+ 
+ const ProjectsPage: NextPageWithLayout = () => {
+@@ -53,7 +53,7 @@ const ProjectsPage: NextPageWithLayout = () => {
+       )}
+       {!navLayoutV2 && (
+         <div className="p-5">
+-          {IS_PLATFORM && projectCreationEnabled && isSuccess && (
++          {projectCreationEnabled && isSuccess && (
+             <HomePageActions search={search} setSearch={setSearch} organizations={organizations} />
+           )}
+           <div className="my-6 space-y-8">
+diff --git a/apps/studio/pages/sign-in.tsx b/apps/studio/pages/sign-in.tsx
+index e9d03e1..a2f7d2b 100644
+--- a/apps/studio/pages/sign-in.tsx
++++ b/apps/studio/pages/sign-in.tsx
+@@ -4,22 +4,13 @@ import SignInForm from 'components/interfaces/SignIn/SignInForm'
+ import SignInWithGitHub from 'components/interfaces/SignIn/SignInWithGitHub'
+ import SignInWithSSO from 'components/interfaces/SignIn/SignInWithSSO'
+ import { SignInLayout } from 'components/layouts'
+-import { IS_PLATFORM } from 'lib/constants'
+ import { useRouter } from 'next/router'
+-import { useEffect } from 'react'
+ import type { NextPageWithLayout } from 'types'
+ 
+ const SignInPage: NextPageWithLayout = () => {
+   const router = useRouter()
+   const searchParams = new URLSearchParams(router.query as Record<string, string>).toString()
+ 
+-  useEffect(() => {
+-    if (!IS_PLATFORM) {
+-      // on selfhosted instance just redirect to projects page
+-      router.replace('/project/default')
+-    }
+-  }, [router])
+-
+   return (
+     <>
+       <div className="flex flex-col gap-5">

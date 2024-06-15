@@ -1,0 +1,16 @@
+diff --git a/apps/studio/components/interfaces/Settings/Infrastructure/InfrastructureConfiguration/DeployNewReplicaPanel.tsx b/apps/studio/components/interfaces/Settings/Infrastructure/InfrastructureConfiguration/DeployNewReplicaPanel.tsx
+index 64d9fde..899d86c 100644
+--- a/apps/studio/components/interfaces/Settings/Infrastructure/InfrastructureConfiguration/DeployNewReplicaPanel.tsx
++++ b/apps/studio/components/interfaces/Settings/Infrastructure/InfrastructureConfiguration/DeployNewReplicaPanel.tsx
+@@ -112,10 +112,7 @@ const DeployNewReplicaPanel = ({
+   const [selectedCompute, setSelectedCompute] = useState(defaultCompute)
+   const selectedComputeMeta = computeAddons.find((addon) => addon.identifier === selectedCompute)
+ 
+-  const availableRegions =
+-    process.env.NEXT_PUBLIC_ENVIRONMENT === 'staging'
+-      ? AVAILABLE_REPLICA_REGIONS.filter((x) => x.key === 'SOUTHEAST_ASIA')
+-      : AVAILABLE_REPLICA_REGIONS
++  const availableRegions = AVAILABLE_REPLICA_REGIONS
+ 
+   const onSubmit = async () => {
+     const regionKey = K8S_REGIONS_VALUES[selectedRegion]

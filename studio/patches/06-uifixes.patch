@@ -1,0 +1,74 @@
+diff --git a/apps/studio/components/layouts/SignInLayout/SignInLayout.tsx b/apps/studio/components/layouts/SignInLayout/SignInLayout.tsx
+index c1b2b53..df65ada 100644
+--- a/apps/studio/components/layouts/SignInLayout/SignInLayout.tsx
++++ b/apps/studio/components/layouts/SignInLayout/SignInLayout.tsx
+@@ -70,7 +70,7 @@ const SignInLayout = ({
+           return
+         }
+       })
+-      .catch(() => {}) // catch all errors thrown by auth methods
++      .catch(() => { }) // catch all errors thrown by auth methods
+   }, [])
+ 
+   const [quote, setQuote] = useState<{
+@@ -90,9 +90,8 @@ const SignInLayout = ({
+     <>
+       <div className="flex flex-col flex-1 bg-alternative">
+         <div
+-          className={`absolute top-0 w-full px-8 mx-auto sm:px-6 lg:px-8 ${
+-            ongoingIncident ? 'mt-14' : 'mt-6'
+-          }`}
++          className={`absolute top-0 w-full px-8 mx-auto sm:px-6 lg:px-8 ${ongoingIncident ? 'mt-14' : 'mt-6'
++            }`}
+         >
+           <nav className="relative flex items-center justify-between sm:h-10">
+             <div className="flex items-center flex-grow flex-shrink-0 lg:flex-grow-0">
+@@ -172,7 +171,7 @@ const SignInLayout = ({
+                   className="flex items-center gap-4"
+                 >
+                   <img
+-                    src={`https://supabase.com${quote.img_url}`}
++                    src={quote.img_url}
+                     alt={quote.handle}
+                     className="w-12 h-12 rounded-full"
+                   />
+diff --git a/apps/studio/pages/sign-in.tsx b/apps/studio/pages/sign-in.tsx
+index 4c94b82..72aafc6 100644
+--- a/apps/studio/pages/sign-in.tsx
++++ b/apps/studio/pages/sign-in.tsx
+@@ -11,15 +11,6 @@ const SignInPage: NextPageWithLayout = () => {
+   return (
+     <>
+       <div className="flex flex-col gap-5">
+-        <div className="relative">
+-          <div className="absolute inset-0 flex items-center">
+-            <div className="w-full border-t border-strong" />
+-          </div>
+-          <div className="relative flex justify-center text-sm">
+-            <span className="px-2 text-sm bg-studio text-foreground">or</span>
+-          </div>
+-        </div>
+-
+         <SignInForm />
+       </div>
+ 
+diff --git a/apps/studio/pages/sign-up.tsx b/apps/studio/pages/sign-up.tsx
+index c243efa..fe35e03 100644
+--- a/apps/studio/pages/sign-up.tsx
++++ b/apps/studio/pages/sign-up.tsx
+@@ -7,15 +7,6 @@ const SignUpPage: NextPageWithLayout = () => {
+   return (
+     <>
+       <div className="flex flex-col gap-5">
+-        <div className="relative">
+-          <div className="absolute inset-0 flex items-center">
+-            <div className="w-full border-t border-strong" />
+-          </div>
+-          <div className="relative flex justify-center text-sm">
+-            <span className="bg-studio px-2 text-sm text-foreground">or</span>
+-          </div>
+-        </div>
+-
+         <SignUpForm />
+       </div>
+ 

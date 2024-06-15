@@ -1,0 +1,169 @@
+diff --git a/apps/studio/components/interfaces/Billing/Subscription/Subscription.utils.ts b/apps/studio/components/interfaces/Billing/Subscription/Subscription.utils.ts
+index c21278b..79107c6 100644
+--- a/apps/studio/components/interfaces/Billing/Subscription/Subscription.utils.ts
++++ b/apps/studio/components/interfaces/Billing/Subscription/Subscription.utils.ts
+@@ -23,6 +23,8 @@ export const billingPartnerLabel = (billingPartner?: string) => {
+       return 'Fly.io'
+     case 'aws':
+       return 'AWS'
++    case 'k8s':
++      return 'Kubernetes'
+     default:
+       return billingPartner
+   }
+diff --git a/apps/studio/components/interfaces/Organization/BillingSettings/Subscription/EnterpriseCard.tsx b/apps/studio/components/interfaces/Organization/BillingSettings/Subscription/EnterpriseCard.tsx
+index d85e884..40fe94a 100644
+--- a/apps/studio/components/interfaces/Organization/BillingSettings/Subscription/EnterpriseCard.tsx
++++ b/apps/studio/components/interfaces/Organization/BillingSettings/Subscription/EnterpriseCard.tsx
+@@ -6,7 +6,7 @@ import { pickFeatures } from 'shared-data/plans'
+ export interface EnterpriseCardProps {
+   plan: PricingInformation
+   isCurrentPlan: boolean
+-  billingPartner: 'fly' | 'aws' | undefined
++  billingPartner: 'fly' | 'aws' | 'k8s' | undefined
+ }
+ 
+ const EnterpriseCard = ({ plan, isCurrentPlan, billingPartner }: EnterpriseCardProps) => {
+diff --git a/apps/studio/components/interfaces/Settings/Infrastructure/InfrastructureConfiguration/DeployNewReplicaPanel.tsx b/apps/studio/components/interfaces/Settings/Infrastructure/InfrastructureConfiguration/DeployNewReplicaPanel.tsx
+index b0b2dd3..64d9fde 100644
+--- a/apps/studio/components/interfaces/Settings/Infrastructure/InfrastructureConfiguration/DeployNewReplicaPanel.tsx
++++ b/apps/studio/components/interfaces/Settings/Infrastructure/InfrastructureConfiguration/DeployNewReplicaPanel.tsx
+@@ -91,7 +91,7 @@ const DeployNewReplicaPanel = ({
+   const canDeployReplica =
+     !reachedMaxReplicas &&
+     currentPgVersion >= 15 &&
+-    project?.cloud_provider === 'AWS' &&
++    project?.cloud_provider === 'K8S' &&
+     !isFreePlan &&
+     isWalgEnabled &&
+     currentComputeAddon !== undefined
+diff --git a/apps/studio/components/interfaces/Settings/Infrastructure/InfrastructureConfiguration/MapView.tsx b/apps/studio/components/interfaces/Settings/Infrastructure/InfrastructureConfiguration/MapView.tsx
+index a5c8c30..27f8682 100644
+--- a/apps/studio/components/interfaces/Settings/Infrastructure/InfrastructureConfiguration/MapView.tsx
++++ b/apps/studio/components/interfaces/Settings/Infrastructure/InfrastructureConfiguration/MapView.tsx
+@@ -264,7 +264,7 @@ const MapView = ({ onSelectDeployNewReplica, onSelectDropReplica }: MapViewProps
+                             <Badge variant="warning">Unhealthy</Badge>
+                           )}
+                         </p>
+-                        <p className="text-xs text-foreground-light">AWS • {database.size}</p>
++                        <p className="text-xs text-foreground-light">K8S • {database.size}</p>
+                         {database.identifier !== ref && (
+                           <p className="text-xs text-foreground-light">Created on: {created}</p>
+                         )}
+diff --git a/apps/studio/data/misc/get-default-region-query.ts b/apps/studio/data/misc/get-default-region-query.ts
+index 2ccea10..bd3842f 100644
+--- a/apps/studio/data/misc/get-default-region-query.ts
++++ b/apps/studio/data/misc/get-default-region-query.ts
+@@ -7,7 +7,7 @@ import { K8S_REGIONS, K8S_REGIONS_DEFAULT } from 'lib/constants'
+ const RESTRICTED_POOL = ['WEST_US', 'CENTRAL_EU', 'SOUTHEAST_ASIA']
+ 
+ export type DefaultRegionVariables = {
+-  cloudProvider?: 'AWS' | 'FLY'
++  cloudProvider?: 'K8S'
+   useRestrictedPool?: boolean
+ }
+ 
+diff --git a/apps/studio/data/projects/project-create-mutation.ts b/apps/studio/data/projects/project-create-mutation.ts
+index dd46ed8..a2b4de0 100644
+--- a/apps/studio/data/projects/project-create-mutation.ts
++++ b/apps/studio/data/projects/project-create-mutation.ts
+@@ -29,7 +29,7 @@ export async function createProject({
+   dbPass,
+   dbRegion,
+   dbSql,
+-  cloudProvider = PROVIDERS.AWS.id,
++  cloudProvider = PROVIDERS.K8S.id,
+   configurationId,
+   authSiteUrl,
+   customSupabaseRequest,
+diff --git a/apps/studio/data/read-replicas/replica-setup-mutation.ts b/apps/studio/data/read-replicas/replica-setup-mutation.ts
+index 6fc0f28..49cd3d2 100644
+--- a/apps/studio/data/read-replicas/replica-setup-mutation.ts
++++ b/apps/studio/data/read-replicas/replica-setup-mutation.ts
+@@ -72,7 +72,7 @@ export const useReadReplicaSetUpMutation = ({
+             region,
+             inserted_at: new Date().toISOString(),
+             status: 'COMING_UP',
+-            cloud_provider: 'AWS',
++            cloud_provider: 'K8S',
+           }
+           return [...old, scaffoldNewDatabase]
+         })
+diff --git a/apps/studio/lib/cloudprovider-utils.ts b/apps/studio/lib/cloudprovider-utils.ts
+index e40898f..d0cf4da 100644
+--- a/apps/studio/lib/cloudprovider-utils.ts
++++ b/apps/studio/lib/cloudprovider-utils.ts
+@@ -2,9 +2,7 @@ import { PROVIDERS } from './constants'
+ 
+ export function getCloudProviderArchitecture(cloudProvider: string | undefined) {
+   switch (cloudProvider) {
+-    case PROVIDERS.AWS.id:
+-      return 'ARM'
+-    case PROVIDERS.FLY.id:
++    case PROVIDERS.K8S.id:
+       return 'x86 64-bit'
+     default:
+       return ''
+diff --git a/apps/studio/pages/api/props/project/[ref]/settings.ts b/apps/studio/pages/api/props/project/[ref]/settings.ts
+index 20eebfd..1d286fe 100644
+--- a/apps/studio/pages/api/props/project/[ref]/settings.ts
++++ b/apps/studio/pages/api/props/project/[ref]/settings.ts
+@@ -22,8 +22,8 @@ const handleGetAll = async (req: NextApiRequest, res: NextApiResponse) => {
+   const response = {
+     project: {
+       ...DEFAULT_PROJECT,
+-      cloud_provider: 'AWS',
+-      region: 'ap-southeast-1',
++      cloud_provider: 'K8S',
++      region: 'MARS-1',
+       db_dns_name: '-',
+       db_host: 'localhost',
+       db_name: 'postgres',
+diff --git a/apps/studio/pages/integrations/vercel/[slug]/deploy-button/new-project.tsx b/apps/studio/pages/integrations/vercel/[slug]/deploy-button/new-project.tsx
+index 7af4c27..0050ab7 100644
+--- a/apps/studio/pages/integrations/vercel/[slug]/deploy-button/new-project.tsx
++++ b/apps/studio/pages/integrations/vercel/[slug]/deploy-button/new-project.tsx
+@@ -60,7 +60,7 @@ const CreateProject = () => {
+   const [passwordStrengthMessage, setPasswordStrengthMessage] = useState('')
+   const [passwordStrengthScore, setPasswordStrengthScore] = useState(-1)
+   const [shouldRunMigrations, setShouldRunMigrations] = useState(true)
+-  const [dbRegion, setDbRegion] = useState(PROVIDERS.AWS.default_region)
++  const [dbRegion, setDbRegion] = useState(PROVIDERS.K8S.default_region)
+ 
+   const snapshot = useIntegrationInstallationSnapshot()
+ 
+diff --git a/apps/studio/pages/vercel/setupProject.tsx b/apps/studio/pages/vercel/setupProject.tsx
+index e01897f..8e5ead7 100644
+--- a/apps/studio/pages/vercel/setupProject.tsx
++++ b/apps/studio/pages/vercel/setupProject.tsx
+@@ -150,7 +150,7 @@ const CreateProject = observer(() => {
+   const [dbPass, setDbPass] = useState('')
+   const [passwordStrengthMessage, setPasswordStrengthMessage] = useState('')
+   const [passwordStrengthScore, setPasswordStrengthScore] = useState(-1)
+-  const [dbRegion, setDbRegion] = useState(PROVIDERS.AWS.default_region)
++  const [dbRegion, setDbRegion] = useState(PROVIDERS.K8S.default_region)
+ 
+   const delayedCheckPasswordStrength = useRef(
+     debounce((value: string) => checkPasswordStrength(value), 300)
+@@ -228,7 +228,7 @@ const CreateProject = observer(() => {
+         VERCEL_INTEGRATION_CONFIGS.find((x) => x.id == _store.externalId)?.template?.sql || ''
+ 
+       createProject({
+-        cloudProvider: PROVIDERS.AWS.id,
++        cloudProvider: PROVIDERS.K8S.id,
+         organizationId: Number(_store.supabaseOrgId),
+         name: projectName,
+         dbPass: dbPass,
+diff --git a/packages/api-types/types/api.d.ts b/packages/api-types/types/api.d.ts
+index f05b737..9db41b6 100644
+--- a/packages/api-types/types/api.d.ts
++++ b/packages/api-types/types/api.d.ts
+@@ -3908,7 +3908,7 @@ export interface components {
+         | 'INIT_READ_REPLICA'
+         | 'INIT_READ_REPLICA_FAILED'
+       /** @enum {string} */
+-      cloud_provider: 'AWS' | 'FLY'
++      cloud_provider: 'AWS' | 'FLY' | 'K8S'
+       db_port: number
+       db_name: string
+       db_user: string
