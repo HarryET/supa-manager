@@ -127,6 +127,7 @@ func (a *Api) Router() *gin.Engine {
 	r.GET("/organizations", a.getOrganizations)
 	r.GET("/profile", a.profile)
 	r.GET("/profile/permissions", a.profilePermissions)
+	r.POST("/profile/password-check", a.profilePasswordCheck)
 
 	gotrue := r.Group("/auth")
 	{
@@ -140,6 +141,7 @@ func (a *Api) Router() *gin.Engine {
 		platform.GET("/stripe/invoices/overdue", a.platformOverdueInvoices)
 		platform.POST("/stripe/setup-intent", a.platformSetupIntent)
 		platform.GET("/projects", a.platformProjects)
+		platform.POST("/organizations", a.platformCreateOrganization)
 	}
 
 	configcat := r.Group("/configcat")

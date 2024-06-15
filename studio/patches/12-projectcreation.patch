@@ -1,0 +1,168 @@
+diff --git a/apps/studio/lib/constants/infrastructure.ts b/apps/studio/lib/constants/infrastructure.ts
+index f36e1df..8dbcce7 100644
+--- a/apps/studio/lib/constants/infrastructure.ts
++++ b/apps/studio/lib/constants/infrastructure.ts
+@@ -4,7 +4,7 @@ export type CloudProvider = 'K8S'
+ export type Region = typeof K8S_REGIONS
+ 
+ export const K8S_REGIONS = {
+-  MARS: 'MARS-1',
++  MARS: 'Mars',
+ } as const
+ 
+ export type K8S_REGIONS_KEYS = keyof typeof K8S_REGIONS
+diff --git a/apps/studio/pages/new/[slug].tsx b/apps/studio/pages/new/[slug].tsx
+index 6a6d197..583f058 100644
+--- a/apps/studio/pages/new/[slug].tsx
++++ b/apps/studio/pages/new/[slug].tsx
+@@ -86,12 +86,10 @@ const Wizard: NextPageWithLayout = () => {
+   const isAdmin = useCheckPermissions(PermissionAction.CREATE, 'projects')
+   const isInvalidSlug = isOrganizationsSuccess && currentOrg === undefined
+   const isEmptyOrganizations = (organizations?.length ?? 0) <= 0 && isOrganizationsSuccess
+-  const hasMembersExceedingFreeTierLimit = (membersExceededLimit || []).length > 0
+ 
+   const showNonProdFields = process.env.NEXT_PUBLIC_ENVIRONMENT !== 'prod'
+ 
+-  const freePlanWithExceedingLimits =
+-    orgSubscription?.plan?.id === 'free' && hasMembersExceedingFreeTierLimit
++  const freePlanWithExceedingLimits = false
+ 
+   const canCreateProject = isAdmin && !freePlanWithExceedingLimits
+ 
+@@ -378,29 +376,27 @@ const Wizard: NextPageWithLayout = () => {
+                   />
+                 </Panel.Content>
+ 
+-                {showNonProdFields && (
+-                  <Panel.Content>
+-                    <Input
+-                      id="custom-postgres-version"
+-                      layout="horizontal"
+-                      label="Postgres Version"
+-                      autoComplete="off"
+-                      descriptionText={
+-                        <p>
+-                          Specify a custom version of Postgres (Defaults to the latest)
+-                          <br />
+-                          This is only applicable for local/staging projects
+-                        </p>
+-                      }
+-                      type="text"
+-                      placeholder="Postgres Version"
+-                      value={postgresVersion}
+-                      onChange={(event: any) => setPostgresVersion(event.target.value)}
+-                    />
+-                  </Panel.Content>
+-                )}
++                <Panel.Content>
++                  <Input
++                    id="custom-postgres-version"
++                    layout="horizontal"
++                    label="Postgres Version"
++                    autoComplete="off"
++                    descriptionText={
++                      <p>
++                        Specify a custom version of Postgres (Defaults to the latest)
++                        <br />
++                        This is only applicable for local/staging projects
++                      </p>
++                    }
++                    type="text"
++                    placeholder="Postgres Version"
++                    value={postgresVersion}
++                    onChange={(event: any) => setPostgresVersion(event.target.value)}
++                  />
++                </Panel.Content>
+ 
+-                {cloudProviderEnabled && showNonProdFields && (
++                {cloudProviderEnabled && (
+                   <Panel.Content>
+                     <Listbox
+                       layout="horizontal"
+@@ -423,86 +419,6 @@ const Wizard: NextPageWithLayout = () => {
+                   </Panel.Content>
+                 )}
+ 
+-                {orgSubscription?.plan.id !== 'free' && (
+-                  <Panel.Content>
+-                    <Listbox
+-                      layout="horizontal"
+-                      label={
+-                        <div className="space-y-4">
+-                          <span>Instance Size</span>
+-
+-                          <div className="flex flex-col space-y-2">
+-                            <Link
+-                              href="https://supabase.com/docs/guides/platform/compute-add-ons"
+-                              target="_blank"
+-                            >
+-                              <div className="flex items-center space-x-2 opacity-75 hover:opacity-100 transition">
+-                                <p className="text-sm m-0">Compute Add-Ons</p>
+-                                <IconExternalLink size={16} strokeWidth={1.5} />
+-                              </div>
+-                            </Link>
+-
+-                            <Link
+-                              href="https://supabase.com/docs/guides/platform/org-based-billing#usage-based-billing-for-compute"
+-                              target="_blank"
+-                            >
+-                              <div className="flex items-center space-x-2 opacity-75 hover:opacity-100 transition">
+-                                <p className="text-sm m-0">Compute Billing</p>
+-                                <IconExternalLink size={16} strokeWidth={1.5} />
+-                              </div>
+-                            </Link>
+-                          </div>
+-                        </div>
+-                      }
+-                      type="select"
+-                      value={instanceSize}
+-                      onChange={(value) => setInstanceSize(value)}
+-                      descriptionText={
+-                        <>
+-                          <p>
+-                            Select the size for your dedicated database. You can always change this
+-                            later.
+-                          </p>
+-                          <p className="mt-1">
+-                            Your organization has $10/month in Compute Credits to cover one instance
+-                            on Micro Compute or parts of any other instance size.
+-                          </p>
+-                        </>
+-                      }
+-                    >
+-                      {sizes.map((option) => {
+-                        return (
+-                          <Listbox.Option
+-                            key={option}
+-                            label={`${instanceSizeSpecs[option].ram} RAM / ${instanceSizeSpecs[option].cpu} CPU (${instanceSizeSpecs[option].label})`}
+-                            value={option}
+-                          >
+-                            <div className="flex space-x-2">
+-                              <div className="text-center w-[80px]">
+-                                <Badge
+-                                  variant={option === 'micro' ? 'default' : 'brand'}
+-                                  className="rounded-md w-16 text-center flex justify-center font-mono uppercase"
+-                                >
+-                                  {instanceSizeSpecs[option].label}
+-                                </Badge>
+-                              </div>
+-                              <div className="text-sm">
+-                                <span className="text-foreground">
+-                                  {instanceSizeSpecs[option].ram} RAM /{' '}
+-                                  {instanceSizeSpecs[option].cpu} CPU
+-                                </span>
+-                                <p className="text-xs text-muted">
+-                                  {instanceSizeSpecs[option].price}
+-                                </p>
+-                              </div>
+-                            </div>
+-                          </Listbox.Option>
+-                        )
+-                      })}
+-                    </Listbox>
+-                  </Panel.Content>
+-                )}
+-
+                 <Panel.Content>
+                   <Input
+                     id="password"

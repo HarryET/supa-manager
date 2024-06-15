@@ -32,9 +32,6 @@ CREATE TABLE IF NOT EXISTS public.organizations
     slug          text        not null default gen_random_uuid()::text,
 
     name          text        not null,
-    kind          text        not null, --help?!
-
-    billing_email text        not null default 'selfhosted@supa-manager.io',
 
     created_at    timestamptz not null default now(),
     updated_at    timestamptz not null default now(),

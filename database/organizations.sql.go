@@ -11,8 +11,27 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createOrganization = `-- name: CreateOrganization :one
+INSERT INTO public.organizations (name, created_at, updated_at)
+VALUES ($1, now(), now())
+RETURNING id, slug, name, created_at, updated_at
+`
+
+func (q *Queries) CreateOrganization(ctx context.Context, name string) (Organization, error) {
+	row := q.db.QueryRow(ctx, createOrganization, name)
+	var i Organization
+	err := row.Scan(
+		&i.ID,
+		&i.Slug,
+		&i.Name,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getOrganizationById = `-- name: GetOrganizationById :one
-SELECT id, slug, name, kind, billing_email, created_at, updated_at FROM public.organizations WHERE slug = $1
+SELECT id, slug, name, created_at, updated_at FROM public.organizations WHERE slug = $1
 `
 
 func (q *Queries) GetOrganizationById(ctx context.Context, id string) (Organization, error) {
@@ -22,30 +41,53 @@ func (q *Queries) GetOrganizationById(ctx context.Context, id string) (Organizat
 		&i.ID,
 		&i.Slug,
 		&i.Name,
-		&i.Kind,
-		&i.BillingEmail,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
 	return i, err
 }
 
+const getOrganizationIdsForAccountId = `-- name: GetOrganizationIdsForAccountId :many
+SELECT o.id
+FROM organization_membership om
+         JOIN organizations o on o.id = om.organization_id
+WHERE account_id = $1
+`
+
+func (q *Queries) GetOrganizationIdsForAccountId(ctx context.Context, accountID int32) ([]int32, error) {
+	rows, err := q.db.Query(ctx, getOrganizationIdsForAccountId, accountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int32
+	for rows.Next() {
+		var id int32
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getOrganizationsForAccountId = `-- name: GetOrganizationsForAccountId :many
-SELECT o.id, o.slug, o.name, o.kind, o.billing_email, o.created_at, o.updated_at, om.role as member_role
+SELECT o.id, o.slug, o.name, o.created_at, o.updated_at, om.role as member_role
 FROM organization_membership om
          JOIN organizations o on o.id = om.organization_id
 WHERE account_id = $1
 `
 
 type GetOrganizationsForAccountIdRow struct {
-	ID           int32
-	Slug         string
-	Name         string
-	Kind         string
-	BillingEmail string
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
-	MemberRole   string
+	ID         int32
+	Slug       string
+	Name       string
+	CreatedAt  pgtype.Timestamptz
+	UpdatedAt  pgtype.Timestamptz
+	MemberRole string
 }
 
 func (q *Queries) GetOrganizationsForAccountId(ctx context.Context, accountID int32) ([]GetOrganizationsForAccountIdRow, error) {
@@ -61,8 +103,6 @@ func (q *Queries) GetOrganizationsForAccountId(ctx context.Context, accountID in
 			&i.ID,
 			&i.Slug,
 			&i.Name,
-			&i.Kind,
-			&i.BillingEmail,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.MemberRole,

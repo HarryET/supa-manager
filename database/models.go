@@ -27,13 +27,11 @@ type Migration struct {
 }
 
 type Organization struct {
-	ID           int32
-	Slug         string
-	Name         string
-	Kind         string
-	BillingEmail string
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
+	ID        int32
+	Slug      string
+	Name      string
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
 }
 
 type OrganizationMembership struct {

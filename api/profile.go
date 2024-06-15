@@ -2,7 +2,9 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/harryet/supa-manager/permisions"
 	"github.com/harryet/supa-manager/utils"
+	"github.com/trustelem/zxcvbn"
 	"net/http"
 )
 
@@ -53,12 +55,37 @@ func (a *Api) platformNotifications(c *gin.Context) {
 }
 
 func (a *Api) profilePermissions(c *gin.Context) {
-	_, err := a.GetAccountFromRequest(c)
+	acc, err := a.GetAccountFromRequest(c)
 	if err != nil {
-		println(err.Error())
 		c.JSON(401, gin.H{"error": "Unauthorized"})
 		return
 	}
 
-	c.JSON(http.StatusOK, []interface{}{})
+	orgIds, err := a.queries.GetOrganizationIdsForAccountId(c, acc.ID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal Server Error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, permisions.ConstructPermissions(orgIds))
+}
+
+type PasswordCheckBody struct {
+	Password string `json:"password"`
+}
+
+func (a *Api) profilePasswordCheck(c *gin.Context) {
+	var body PasswordCheckBody
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(400, gin.H{"error": "Bad Request"})
+		return
+	}
+
+	result := zxcvbn.PasswordStrength(body.Password, nil)
+
+	c.JSON(http.StatusOK, gin.H{
+		"result": gin.H{
+			"score": result.Score,
+		},
+	})
 }
