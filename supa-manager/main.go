@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/harryet/supa-manager/api"
-	"github.com/harryet/supa-manager/conf"
 	"log/slog"
 	"os"
+	"supamanager.io/supa-manager/api"
+	"supamanager.io/supa-manager/conf"
 )
 
 func main() {

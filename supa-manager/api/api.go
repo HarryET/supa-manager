@@ -7,12 +7,12 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/harryet/supa-manager/conf"
-	"github.com/harryet/supa-manager/database"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/matthewhartstonge/argon2"
 	"log/slog"
 	"net/http"
+	"supamanager.io/supa-manager/conf"
+	"supamanager.io/supa-manager/database"
 	"time"
 )
 

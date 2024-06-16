@@ -2,7 +2,7 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/harryet/supa-manager/utils"
+	"supamanager.io/supa-manager/utils"
 )
 
 type ProfileReturn struct {

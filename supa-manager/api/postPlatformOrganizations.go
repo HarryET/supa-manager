@@ -2,8 +2,8 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/harryet/supa-manager/database"
 	"net/http"
+	"supamanager.io/supa-manager/database"
 )
 
 type CreateOrgParams struct {

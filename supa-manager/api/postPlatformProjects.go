@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/harryet/supa-manager/database"
 	"github.com/tjarratt/babble"
 	"net/http"
 	"strings"
+	"supamanager.io/supa-manager/database"
 )
 
 type ProjectCreationBody struct {

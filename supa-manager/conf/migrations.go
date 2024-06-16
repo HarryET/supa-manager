@@ -3,12 +3,12 @@ package conf
 import (
 	"context"
 	"fmt"
-	"github.com/harryet/supa-manager/database"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"os"
 	"strings"
+	"supamanager.io/supa-manager/database"
 )
 
 func EnsureMigrationsTableExists(conn *pgxpool.Pool) error {

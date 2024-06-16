@@ -2,8 +2,8 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/harryet/supa-manager/permisions"
 	"net/http"
+	"supamanager.io/supa-manager/permisions"
 )
 
 func (a *Api) getProfilePermissions(c *gin.Context) {
