@@ -1,0 +1,304 @@
+diff --git a/apps/studio/components/interfaces/Billing/Payment/AddNewPaymentMethodModal.tsx b/apps/studio/components/interfaces/Billing/Payment/AddNewPaymentMethodModal.tsx
+index 2fd7bf4..33ca0fb 100644
+--- a/apps/studio/components/interfaces/Billing/Payment/AddNewPaymentMethodModal.tsx
++++ b/apps/studio/components/interfaces/Billing/Payment/AddNewPaymentMethodModal.tsx
+@@ -1,6 +1,4 @@
+ import HCaptcha from '@hcaptcha/react-hcaptcha'
+-import { Elements } from '@stripe/react-stripe-js'
+-import { loadStripe } from '@stripe/stripe-js'
+ import { useTheme } from 'next-themes'
+ import { useCallback, useEffect, useState } from 'react'
+ import toast from 'react-hot-toast'
+@@ -8,9 +6,7 @@ import { Modal } from 'ui'
+ 
+ import { useOrganizationPaymentMethodSetupIntent } from 'data/organizations/organization-payment-method-setup-intent-mutation'
+ import { useSelectedOrganization } from 'hooks'
+-import { STRIPE_PUBLIC_KEY } from 'lib/constants'
+ import { useIsHCaptchaLoaded } from 'stores/hcaptcha-loaded-store'
+-import AddPaymentMethodForm from './AddPaymentMethodForm'
+ 
+ interface AddNewPaymentMethodModalProps {
+   visible: boolean
+@@ -19,8 +15,6 @@ interface AddNewPaymentMethodModalProps {
+   onConfirm: () => void
+ }
+ 
+-const stripePromise = loadStripe(STRIPE_PUBLIC_KEY)
+-
+ const AddNewPaymentMethodModal = ({
+   visible,
+   returnUrl,
+@@ -132,15 +126,7 @@ const AddNewPaymentMethodModal = ({
+         onCancel={onLocalCancel}
+         className="PAYMENT"
+       >
+-        <div className="py-4 space-y-4">
+-          <Elements stripe={stripePromise} options={options}>
+-            <AddPaymentMethodForm
+-              returnUrl={returnUrl}
+-              onCancel={onLocalCancel}
+-              onConfirm={onLocalConfirm}
+-            />
+-          </Elements>
+-        </div>
++        <div className="py-4 space-y-4"></div>
+       </Modal>
+     </>
+   )
+diff --git a/apps/studio/components/interfaces/Billing/Payment/AddPaymentMethodForm.tsx b/apps/studio/components/interfaces/Billing/Payment/AddPaymentMethodForm.tsx
+index 581fe0a..4c71bfb 100644
+--- a/apps/studio/components/interfaces/Billing/Payment/AddPaymentMethodForm.tsx
++++ b/apps/studio/components/interfaces/Billing/Payment/AddPaymentMethodForm.tsx
+@@ -1,6 +1,4 @@
+-import { PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
+ import { useState } from 'react'
+-import toast from 'react-hot-toast'
+ import { Button, Modal } from 'ui'
+ 
+ interface AddPaymentMethodFormProps {
+@@ -14,19 +12,11 @@ interface AddPaymentMethodFormProps {
+ // Small UX annoyance here, that the page will be refreshed
+ 
+ const AddPaymentMethodForm = ({ returnUrl, onCancel, onConfirm }: AddPaymentMethodFormProps) => {
+-  const stripe = useStripe()
+-  const elements = useElements()
+-
+   const [isSaving, setIsSaving] = useState(false)
+ 
+   const handleSubmit = async (event: any) => {
+     event.preventDefault()
+ 
+-    if (!stripe || !elements) {
+-      console.error('Stripe.js has not loaded')
+-      return
+-    }
+-
+     setIsSaving(true)
+ 
+     if (document !== undefined) {
+@@ -34,19 +24,8 @@ const AddPaymentMethodForm = ({ returnUrl, onCancel, onConfirm }: AddPaymentMeth
+       document.body.classList.add('!pointer-events-auto')
+     }
+ 
+-    const { error } = await stripe.confirmSetup({
+-      elements,
+-      redirect: 'if_required',
+-      confirmParams: { return_url: returnUrl },
+-    })
+-
+-    if (error) {
+-      setIsSaving(false)
+-      toast.error(error?.message ?? ' Failed to save card details')
+-    } else {
+-      setIsSaving(false)
+-      onConfirm()
+-    }
++    setIsSaving(false)
++    onConfirm()
+ 
+     if (document !== undefined) {
+       document.body.classList.remove('!pointer-events-auto')
+@@ -58,9 +37,7 @@ const AddPaymentMethodForm = ({ returnUrl, onCancel, onConfirm }: AddPaymentMeth
+       <Modal.Content>
+         <div
+           className={`transition ${isSaving ? 'pointer-events-none opacity-75' : 'opacity-100'}`}
+-        >
+-          <PaymentElement />
+-        </div>
++        ></div>
+       </Modal.Content>
+       <Modal.Separator />
+       <Modal.Content>
+diff --git a/apps/studio/components/ui/PageTelemetry.tsx b/apps/studio/components/ui/PageTelemetry.tsx
+index 4381829..f4683b8 100644
+--- a/apps/studio/components/ui/PageTelemetry.tsx
++++ b/apps/studio/components/ui/PageTelemetry.tsx
+@@ -59,26 +59,27 @@ const PageTelemetry = ({ children }: PropsWithChildren<{}>) => {
+     /**
+      * Send page telemetry
+      */
+-    post(`${API_URL}/telemetry/page`, {
+-      referrer: referrer,
+-      title: document.title,
+-      route,
+-      ga: {
+-        screen_resolution: telemetryProps?.screenResolution,
+-        language: telemetryProps?.language,
+-      },
+-    })
++    // Note (Harry): We don't want telemetry! Save the bandwidth :)
++    // post(`${API_URL}/telemetry/page`, {
++    //   referrer: referrer,
++    //   title: document.title,
++    //   route,
++    //   ga: {
++    //     screen_resolution: telemetryProps?.screenResolution,
++    //     language: telemetryProps?.language,
++    //   },
++    // })
+ 
+-    if (isLoggedIn) {
+-      post(`${API_URL}/telemetry/pageview`, {
+-        ...(ref && { projectRef: ref }),
+-        ...(selectedOrganization && { orgSlug: selectedOrganization.slug }),
+-        referrer: referrer,
+-        title: document.title,
+-        path: router.route,
+-        location: router.asPath,
+-      })
+-    }
++    // if (isLoggedIn) {
++    // post(`${API_URL}/telemetry/pageview`, {
++    //   ...(ref && { projectRef: ref }),
++    //   ...(selectedOrganization && { orgSlug: selectedOrganization.slug }),
++    //   referrer: referrer,
++    //   title: document.title,
++    //   path: router.route,
++    //   location: router.asPath,
++    // })
++    // }
+   }
+ 
+   return <>{children}</>
+diff --git a/apps/studio/lib/telemetry.ts b/apps/studio/lib/telemetry.ts
+index 1726911..8d5ca0e 100644
+--- a/apps/studio/lib/telemetry.ts
++++ b/apps/studio/lib/telemetry.ts
+@@ -62,13 +62,15 @@ const sendIdentify = (user: User, gaProps?: TelemetryProps) => {
+       : null
+   if (consent !== 'true') return
+ 
+-  return post(`${API_URL}/telemetry/identify`, {
+-    user,
+-    ga: {
+-      screen_resolution: gaProps?.screenResolution,
+-      language: gaProps?.language,
+-    },
+-  })
++  return null
++
++  // return post(`${API_URL}/telemetry/identify`, {
++  //   user,
++  //   ga: {
++  //     screen_resolution: gaProps?.screenResolution,
++  //     language: gaProps?.language,
++  //   },
++  // })
+ }
+ 
+ /**
+@@ -105,7 +107,8 @@ const sendActivity = (
+     ...(projectRef && { projectRef }),
+     ...(orgSlug && { orgSlug }),
+   }
+-  return post(`${API_URL}/telemetry/activity`, properties)
++  return null
++  //return post(`${API_URL}/telemetry/activity`, properties)
+ }
+ 
+ const Telemetry = {
+diff --git a/apps/studio/package.json b/apps/studio/package.json
+index 97883b3..29779f9 100644
+--- a/apps/studio/package.json
++++ b/apps/studio/package.json
+@@ -29,8 +29,6 @@
+     "@radix-ui/react-tooltip": "^1.0.7",
+     "@scaleleap/pg-format": "^1.0.0",
+     "@sentry/nextjs": "^7.108.0",
+-    "@stripe/react-stripe-js": "^2.5.0",
+-    "@stripe/stripe-js": "^3.0.5",
+     "@supabase/auth-helpers-react": "^0.4.2",
+     "@supabase/pg-meta": "*",
+     "@supabase/shared-types": "0.1.55",
+diff --git a/apps/studio/pages/new/index.tsx b/apps/studio/pages/new/index.tsx
+index 821314e..87f0977 100644
+--- a/apps/studio/pages/new/index.tsx
++++ b/apps/studio/pages/new/index.tsx
+@@ -1,49 +1,24 @@
+ import HCaptcha from '@hcaptcha/react-hcaptcha'
+-import { Elements } from '@stripe/react-stripe-js'
+-import { loadStripe } from '@stripe/stripe-js'
+-import { useTheme } from 'next-themes'
+-import { useCallback, useEffect, useState } from 'react'
++import { useCallback, useState } from 'react'
+ 
+ import { NewOrgForm } from 'components/interfaces/Organization'
+ import { WizardLayout } from 'components/layouts'
+-import { useSetupIntent } from 'data/stripe/setup-intent-mutation'
+-import { STRIPE_PUBLIC_KEY } from 'lib/constants'
+ import { useIsHCaptchaLoaded } from 'stores/hcaptcha-loaded-store'
+ import type { NextPageWithLayout } from 'types'
+ 
+-const stripePromise = loadStripe(STRIPE_PUBLIC_KEY)
+-
+ /**
+  * No org selected yet, create a new one
+  */
+ const Wizard: NextPageWithLayout = () => {
+-  const { resolvedTheme } = useTheme()
+-
+-  const [intent, setIntent] = useState<any>()
+   const captchaLoaded = useIsHCaptchaLoaded()
+ 
+   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+   const [captchaRef, setCaptchaRef] = useState<HCaptcha | null>(null)
+ 
+-  const { mutate: setupIntent } = useSetupIntent({ onSuccess: (res) => setIntent(res) })
+-
+   const captchaRefCallback = useCallback((node: any) => {
+     setCaptchaRef(node)
+   }, [])
+ 
+-  const initSetupIntent = async (hcaptchaToken: string | undefined) => {
+-    if (!hcaptchaToken) return console.error('Hcaptcha token is required')
+-
+-    // Force a reload of Elements, necessary for Stripe
+-    setIntent(undefined)
+-    setupIntent({ hcaptchaToken })
+-  }
+-
+-  const options = {
+-    clientSecret: intent ? intent.client_secret : '',
+-    appearance: { theme: resolvedTheme?.includes('dark') ? 'night' : 'flat', labels: 'floating' },
+-  } as any
+-
+   const loadPaymentForm = async () => {
+     if (captchaRef && captchaLoaded) {
+       let token = captchaToken
+@@ -57,22 +32,15 @@ const Wizard: NextPageWithLayout = () => {
+         return
+       }
+ 
+-      await initSetupIntent(token ?? undefined)
+       resetCaptcha()
+     }
+   }
+ 
+-  useEffect(() => {
+-    loadPaymentForm()
+-  }, [captchaRef, captchaLoaded])
+-
+   const resetSetupIntent = () => {
+     return loadPaymentForm()
+   }
+ 
+-  const onLocalCancel = () => {
+-    setIntent(undefined)
+-  }
++  const onLocalCancel = () => {}
+ 
+   const resetCaptcha = () => {
+     setCaptchaToken(null)
+@@ -94,11 +62,7 @@ const Wizard: NextPageWithLayout = () => {
+         }}
+       />
+ 
+-      {intent && (
+-        <Elements stripe={stripePromise} options={options}>
+-          <NewOrgForm onPaymentMethodReset={() => resetSetupIntent()} />
+-        </Elements>
+-      )}
++      <NewOrgForm onPaymentMethodReset={() => resetSetupIntent()} />
+     </>
+   )
+ }

@@ -128,6 +128,9 @@ func (a *Api) Router() *gin.Engine {
 	r.GET("/profile", a.profile)
 	r.GET("/profile/permissions", a.profilePermissions)
 	r.POST("/profile/password-check", a.profilePasswordCheck)
+	r.GET("/organizations/:slug/members/reached-free-project-limit", a.platformReachedFreeProjectLimit)
+	r.GET("/projects/:ref/status", a.projectStatus)
+	r.GET("/props/project/:ref/jwt-secret-update-status", a.projectJwtSecretUpdateStatus)
 
 	gotrue := r.Group("/auth")
 	{
@@ -139,9 +142,14 @@ func (a *Api) Router() *gin.Engine {
 		platform.POST("/signup", a.platformSignup)
 		platform.GET("/notifications", a.platformNotifications)
 		platform.GET("/stripe/invoices/overdue", a.platformOverdueInvoices)
-		platform.POST("/stripe/setup-intent", a.platformSetupIntent)
 		platform.GET("/projects", a.platformProjects)
+		platform.POST("/projects", a.platformCreateProject)
+		platform.GET("/projects/:ref", a.platformProject)
 		platform.POST("/organizations", a.platformCreateOrganization)
+		platform.GET("/organizations/:slug/billing/subscription", a.platformOrganizationBillingSubscription)
+		// TODO rename
+		platform.GET("/integrations/:integration/connections", a.projectConnections)
+		platform.GET("/props/project/:ref/settings", a.projectSettings)
 	}
 
 	configcat := r.Group("/configcat")

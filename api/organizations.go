@@ -88,3 +88,13 @@ func (a *Api) platformCreateOrganization(c *gin.Context) {
 
 	c.AbortWithStatus(http.StatusCreated)
 }
+
+func (a *Api) platformReachedFreeProjectLimit(c *gin.Context) {
+	_, err := a.GetAccountFromRequest(c)
+	if err != nil {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	c.JSON(http.StatusOK, []interface{}{})
+}

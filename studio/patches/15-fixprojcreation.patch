@@ -1,0 +1,25 @@
+diff --git a/apps/studio/pages/new/[slug].tsx b/apps/studio/pages/new/[slug].tsx
+index 583f058..be4ce27 100644
+--- a/apps/studio/pages/new/[slug].tsx
++++ b/apps/studio/pages/new/[slug].tsx
+@@ -179,6 +179,7 @@ const Wizard: NextPageWithLayout = () => {
+         toast.error(
+           `Invalid Postgres version, should start with a number between 12-19, a dot and additional characters, i.e. 15.2 or 15.2.0-3`
+         )
++        return
+       }
+ 
+       data['customSupabaseRequest'] = {
+@@ -383,11 +384,7 @@ const Wizard: NextPageWithLayout = () => {
+                     label="Postgres Version"
+                     autoComplete="off"
+                     descriptionText={
+-                      <p>
+-                        Specify a custom version of Postgres (Defaults to the latest)
+-                        <br />
+-                        This is only applicable for local/staging projects
+-                      </p>
++                      <p>Specify a custom version of Postgres (Defaults to the latest)</p>
+                     }
+                     type="text"
+                     placeholder="Postgres Version"

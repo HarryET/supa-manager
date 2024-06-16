@@ -1,0 +1,37 @@
+diff --git a/apps/studio/components/interfaces/ProjectCreation/RegionSelector.tsx b/apps/studio/components/interfaces/ProjectCreation/RegionSelector.tsx
+index dc0e81b..d22a5ca 100644
+--- a/apps/studio/components/interfaces/ProjectCreation/RegionSelector.tsx
++++ b/apps/studio/components/interfaces/ProjectCreation/RegionSelector.tsx
+@@ -45,7 +45,7 @@ export const RegionSelector = ({
+       type="select"
+       value={selectedRegion}
+       onChange={(value) => onSelectRegion(value)}
+-      descriptionText="Select the region closest to your users for the best performance."
++      descriptionText="Currently the region selected has no impact."
+     >
+       <Listbox.Option disabled key="empty" label="---" value="">
+         <span className="text-foreground">Select a region for your project</span>
+diff --git a/apps/studio/components/interfaces/Settings/Infrastructure/InfrastructureConfiguration/InstanceConfiguration.constants.ts b/apps/studio/components/interfaces/Settings/Infrastructure/InfrastructureConfiguration/InstanceConfiguration.constants.ts
+index cb4b6e4..b91a197 100644
+--- a/apps/studio/components/interfaces/Settings/Infrastructure/InfrastructureConfiguration/InstanceConfiguration.constants.ts
++++ b/apps/studio/components/interfaces/Settings/Infrastructure/InfrastructureConfiguration/InstanceConfiguration.constants.ts
+@@ -23,6 +23,7 @@ export const REPLICA_STATUS: {
+ 
+ export const K8S_REGIONS_VALUES: { [key: string]: string } = {
+   MARS: 'MARS-1',
++  JUPITER: 'JUPITER-1',
+ }
+ 
+ export const AVAILABLE_REPLICA_REGIONS: Region[] = []
+diff --git a/apps/studio/lib/constants/infrastructure.ts b/apps/studio/lib/constants/infrastructure.ts
+index 8dbcce7..11c4817 100644
+--- a/apps/studio/lib/constants/infrastructure.ts
++++ b/apps/studio/lib/constants/infrastructure.ts
+@@ -5,6 +5,7 @@ export type Region = typeof K8S_REGIONS
+ 
+ export const K8S_REGIONS = {
+   MARS: 'Mars',
++  JUPITER: 'Jupiter',
+ } as const
+ 
+ export type K8S_REGIONS_KEYS = keyof typeof K8S_REGIONS
