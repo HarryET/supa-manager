@@ -7,4 +7,12 @@ This folder has the script we use to build that automatically applies all the pa
 > Please refer to the .env.example file for the required variables
 
 ## Usage
-`./build [branch] [docker tag] [.env file (optional)]`
+`./build.sh [branch] [docker tag] [.env file (optional)]` - This will build the patched version of the Supabase Studio and tag it with the specified tag
+
+`./patch.sh [branch]` - This will apply the patches to the specified branch
+
+## Creating new Patches
+1. Download a version of the Studio and patch it using `./patch.sh`
+2. `git add . && git commit -m "checkpoint"` - Create a checkpoint so patches are applied incrementally
+3. Make your changes to the studio codebase
+4. `git diff > patches/00-yourpatch.patch` - Create a patch file and increment the number based on the last patch
