@@ -122,34 +122,69 @@ func (a *Api) Router() *gin.Engine {
 
 	r.GET("/", a.index)
 	r.GET("/status", a.status)
-	r.GET("/telemetry/:event", a.telemetry)
 
-	r.GET("/organizations", a.getOrganizations)
-	r.GET("/profile", a.profile)
-	r.GET("/profile/permissions", a.profilePermissions)
-	r.POST("/profile/password-check", a.profilePasswordCheck)
-	r.GET("/organizations/:slug/members/reached-free-project-limit", a.platformReachedFreeProjectLimit)
-	r.GET("/projects/:ref/status", a.projectStatus)
-	r.GET("/props/project/:ref/jwt-secret-update-status", a.projectJwtSecretUpdateStatus)
+	profile := r.Group("/profile")
+	{
+		profile.GET("/", a.getProfile)
+		profile.GET("/permissions", a.getProfilePermissions)
+		profile.POST("/password-check", a.postPasswordCheck)
+	}
+
+	organization := r.Group("/organization")
+	{
+		organization.GET("/", a.getOrganizations)
+
+		specificOrganization := organization.Group("/:slug")
+		{
+			members := specificOrganization.Group("/members")
+			{
+				members.GET("/reached-free-project-limit", a.getOrganizationMembersReachedFreeProjectLimit)
+			}
+		}
+	}
+
+	projects := r.Group("/projects")
+	{
+		specificProject := projects.Group("/:ref")
+		{
+			specificProject.GET("/status", a.getProjectStatus)
+			specificProject.GET("/jwt-secret-update-status", a.getProjectJwtSecretUpdateStatus)
+			specificProject.GET("/api", a.getProjectApi)
+		}
+	}
 
 	gotrue := r.Group("/auth")
 	{
-		gotrue.POST("/token", a.gotrueToken)
+		gotrue.POST("/token", a.postGotrueToken)
 	}
 
 	platform := r.Group("/platform")
 	{
-		platform.POST("/signup", a.platformSignup)
-		platform.GET("/notifications", a.platformNotifications)
-		platform.GET("/stripe/invoices/overdue", a.platformOverdueInvoices)
-		platform.GET("/projects", a.platformProjects)
-		platform.POST("/projects", a.platformCreateProject)
-		platform.GET("/projects/:ref", a.platformProject)
-		platform.POST("/organizations", a.platformCreateOrganization)
-		platform.GET("/organizations/:slug/billing/subscription", a.platformOrganizationBillingSubscription)
-		// TODO rename
-		platform.GET("/integrations/:integration/connections", a.projectConnections)
-		platform.GET("/props/project/:ref/settings", a.projectSettings)
+		platform.POST("/signup", a.postPlatformSignup)
+		platform.GET("/notifications", a.getPlatformNotifications)
+		platform.GET("/stripe/invoices/overdue", a.getPlatformOverdueInvoices)
+
+		platformProjects := platform.Group("/projects")
+		{
+			platformProjects.GET("/", a.getPlatformProjects)
+			platformProjects.POST("/", a.postPlatformProjects)
+			specificProject := platformProjects.Group("/:ref")
+			{
+				specificProject.GET("/", a.getPlatformProject)
+				specificProject.GET("/settings", a.getPlatformProjectSettings)
+			}
+		}
+
+		platformOrganizations := platform.Group("/organizations")
+		{
+			platformOrganizations.POST("/", a.postPlatformOrganizations)
+			specificOrganization := platformOrganizations.Group("/:slug")
+			{
+				specificOrganization.GET("/billing/subscription", a.getPlatformOrganizationSubscription)
+			}
+		}
+
+		platform.GET("/integrations/:integration/connections", a.getIntegrationConnections)
 	}
 
 	configcat := r.Group("/configcat")

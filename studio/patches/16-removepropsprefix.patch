@@ -1,0 +1,40 @@
+diff --git a/apps/studio/data/config/project-api-query.ts b/apps/studio/data/config/project-api-query.ts
+index ae1e960..87dd75f 100644
+--- a/apps/studio/data/config/project-api-query.ts
++++ b/apps/studio/data/config/project-api-query.ts
+@@ -66,7 +66,7 @@ export async function getProjectApi({ projectRef }: ProjectApiVariables, signal?
+     throw new Error('projectRef is required')
+   }
+ 
+-  const response = await get(`${API_URL}/props/project/${projectRef}/api`, {
++  const response = await get(`${API_URL}/project/${projectRef}/api`, {
+     signal,
+   })
+   if (response.error) {
+diff --git a/apps/studio/data/config/project-settings-query.ts b/apps/studio/data/config/project-settings-query.ts
+index 7123a01..d326c7d 100644
+--- a/apps/studio/data/config/project-settings-query.ts
++++ b/apps/studio/data/config/project-settings-query.ts
+@@ -29,7 +29,8 @@ export async function getProjectSettings(
+   if (!projectRef) throw new Error('projectRef is required')
+ 
+   // [Joshen] API typing is wrong here
+-  const { data, error } = await get('/platform/props/project/{ref}/settings', {
++  // @ts-ignore
++  const { data, error } = await get('/platform/project/{ref}/settings', {
+     params: { path: { ref: projectRef } },
+     signal,
+   })
+diff --git a/apps/studio/pages/vercel/integrate.tsx b/apps/studio/pages/vercel/integrate.tsx
+index 0fdbd91..da4ffa8 100644
+--- a/apps/studio/pages/vercel/integrate.tsx
++++ b/apps/studio/pages/vercel/integrate.tsx
+@@ -350,7 +350,7 @@ const ProjectLinks = observer(() => {
+           continue
+         }
+         // If not, pull project detail info
+-        const projectDetails = await get(`${API_URL}/props/project/${item.supabaseProjectRef}/api`)
++        const projectDetails = await get(`${API_URL}/project/${item.supabaseProjectRef}/api`)
+         if (projectDetails.error) {
+           console.error('project info error: ', projectDetails.error)
+           runInAction(() => {

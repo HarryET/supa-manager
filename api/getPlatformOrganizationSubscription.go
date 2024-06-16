@@ -1,21 +1,8 @@
 package api
 
-import (
-	"github.com/gin-gonic/gin"
-	"net/http"
-)
+import "github.com/gin-gonic/gin"
 
-func (a *Api) platformOverdueInvoices(c *gin.Context) {
-	_, err := a.GetAccountFromRequest(c)
-	if err != nil {
-		c.JSON(401, gin.H{"error": "Unauthorized"})
-		return
-	}
-
-	c.JSON(http.StatusOK, []interface{}{})
-}
-
-type OrgBillingSubscription struct {
+type PlatformSubscriptionOrganizationSubscriptionBody struct {
 	NanoEnabled        bool `json:"nano_enabled"`
 	BillingViaPartner  bool `json:"billing_via_partner"`
 	CurrentPeriodEnd   int  `json:"current_period_end"`
@@ -32,14 +19,14 @@ type OrgBillingSubscription struct {
 	PaymentMethodType   string        `json:"payment_method_type"`
 }
 
-func (a *Api) platformOrganizationBillingSubscription(c *gin.Context) {
+func (a *Api) getPlatformOrganizationSubscription(c *gin.Context) {
 	_, err := a.GetAccountFromRequest(c)
 	if err != nil {
 		c.JSON(401, gin.H{"error": "Unauthorized"})
 		return
 	}
 
-	c.JSON(200, OrgBillingSubscription{
+	c.JSON(200, PlatformSubscriptionOrganizationSubscriptionBody{
 		NanoEnabled:        false,
 		BillingViaPartner:  false,
 		CurrentPeriodEnd:   2147385600, // Jan 18, 2038
