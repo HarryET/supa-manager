@@ -109,6 +109,8 @@ func (a *Api) telemetry(c *gin.Context) {
 	c.AbortWithStatus(http.StatusNoContent)
 }
 
+const INDEX = ""
+
 func (a *Api) Router() *gin.Engine {
 	r := gin.Default()
 
@@ -125,14 +127,14 @@ func (a *Api) Router() *gin.Engine {
 
 	profile := r.Group("/profile")
 	{
-		profile.GET("/", a.getProfile)
+		profile.GET(INDEX, a.getProfile)
 		profile.GET("/permissions", a.getProfilePermissions)
 		profile.POST("/password-check", a.postPasswordCheck)
 	}
 
-	organization := r.Group("/organization")
+	organization := r.Group("/organizations")
 	{
-		organization.GET("/", a.getOrganizations)
+		organization.GET(INDEX, a.getOrganizations)
 
 		specificOrganization := organization.Group("/:slug")
 		{
@@ -166,18 +168,18 @@ func (a *Api) Router() *gin.Engine {
 
 		platformProjects := platform.Group("/projects")
 		{
-			platformProjects.GET("/", a.getPlatformProjects)
-			platformProjects.POST("/", a.postPlatformProjects)
+			platformProjects.GET(INDEX, a.getPlatformProjects)
+			platformProjects.POST(INDEX, a.postPlatformProjects)
 			specificProject := platformProjects.Group("/:ref")
 			{
-				specificProject.GET("/", a.getPlatformProject)
+				specificProject.GET(INDEX, a.getPlatformProject)
 				specificProject.GET("/settings", a.getPlatformProjectSettings)
 			}
 		}
 
 		platformOrganizations := platform.Group("/organizations")
 		{
-			platformOrganizations.POST("/", a.postPlatformOrganizations)
+			platformOrganizations.POST(INDEX, a.postPlatformOrganizations)
 			specificOrganization := platformOrganizations.Group("/:slug")
 			{
 				specificOrganization.GET("/billing/subscription", a.getPlatformOrganizationSubscription)

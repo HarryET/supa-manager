@@ -7,6 +7,7 @@ import (
 	"github.com/harryet/supa-manager/database"
 	"github.com/tjarratt/babble"
 	"net/http"
+	"strings"
 )
 
 type ProjectCreationBody struct {
@@ -26,20 +27,23 @@ type ProjectCreationBody struct {
 }
 
 type ProjectCreationResponse struct {
-	Id                       int32         `json:"id"`
-	Ref                      string        `json:"ref"`
-	Name                     string        `json:"name"`
-	Status                   string        `json:"status"`
-	OrganizationId           int32         `json:"organization_id"`
-	CloudProvider            string        `json:"cloud_provider"`
-	Region                   string        `json:"region"`
-	InsertedAt               string        `json:"inserted_at"`
-	Endpoint                 string        `json:"endpoint"`
-	AnonKey                  string        `json:"anon_key"`
-	ServiceKey               string        `json:"service_key"`
-	IsBranchEnabled          bool          `json:"is_branch_enabled"`
-	PreviewBranchRefs        []interface{} `json:"preview_branch_refs"`
-	IsPhysicalBackupsEnabled bool          `json:"is_physical_backups_enabled"`
+	Id                       int32    `json:"id"`
+	Ref                      string   `json:"ref"`
+	Name                     string   `json:"name"`
+	Status                   string   `json:"status"`
+	OrganizationId           int32    `json:"organization_id"`
+	CloudProvider            string   `json:"cloud_provider"`
+	Region                   string   `json:"region"`
+	InsertedAt               string   `json:"inserted_at"`
+	Endpoint                 string   `json:"endpoint"`
+	AnonKey                  string   `json:"anon_key"`
+	ServiceKey               string   `json:"service_key"`
+	IsBranchEnabled          bool     `json:"is_branch_enabled"`
+	PreviewBranchRefs        []string `json:"preview_branch_refs"`
+	IsPhysicalBackupsEnabled bool     `json:"is_physical_backups_enabled"`
+	IsReadReplicasEnabled    bool     `json:"is_read_replicas_enabled"`
+	DiskVolumeSizeGb         int32    `json:"disk_volume_size_gb"`
+	SubscriptionId           string   `json:"subscription_id"`
 }
 
 func (a *Api) postPlatformProjects(c *gin.Context) {
@@ -56,10 +60,12 @@ func (a *Api) postPlatformProjects(c *gin.Context) {
 	}
 
 	proj, err := a.queries.CreateProject(c.Request.Context(), database.CreateProjectParams{
-		ProjectRef:     babble.NewBabbler().Babble(),
+		ProjectRef:     strings.ToLower(babble.NewBabbler().Babble()),
 		ProjectName:    createProject.Name,
 		OrganizationID: createProject.OrgId,
 		JwtSecret:      uuid.New().String(),
+		CloudProvider:  strings.ToUpper(createProject.CloudProvider),
+		Region:         strings.ToUpper(createProject.DbRegion),
 	})
 
 	if err != nil {
@@ -76,11 +82,14 @@ func (a *Api) postPlatformProjects(c *gin.Context) {
 		CloudProvider:            proj.CloudProvider,
 		Region:                   proj.Region,
 		InsertedAt:               proj.CreatedAt.Time.Format("2006-01-02T15:04:05.999Z"),
-		Endpoint:                 fmt.Sprintf("https://%s.supamanager.io", proj.ProjectRef),
+		Endpoint:                 fmt.Sprintf("https://%s.%s", proj.ProjectRef, a.config.Domain.Base),
 		AnonKey:                  "a.b.c",
 		ServiceKey:               "a.b.c",
 		IsBranchEnabled:          false,
-		PreviewBranchRefs:        []interface{}{},
+		PreviewBranchRefs:        []string{},
 		IsPhysicalBackupsEnabled: false,
+		IsReadReplicasEnabled:    false,
+		DiskVolumeSizeGb:         0,
+		SubscriptionId:           "wedontbill",
 	})
 }

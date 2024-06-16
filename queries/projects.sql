@@ -5,8 +5,8 @@ FROM organization_membership om
 WHERE account_id = $1;
 
 -- name: CreateProject :one
-INSERT INTO project (project_ref, project_name, organization_id, status, jwt_secret)
-VALUES ($1, $2, $3, 'UNKNOWN', $4)
+INSERT INTO project (project_ref, project_name, organization_id, status, jwt_secret, cloud_provider, region)
+VALUES ($1, $2, $3, 'UNKNOWN', $4, $5, $6)
 RETURNING *;
 
 -- name: GetProjectByRef :one

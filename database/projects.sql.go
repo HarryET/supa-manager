@@ -10,8 +10,8 @@ import (
 )
 
 const createProject = `-- name: CreateProject :one
-INSERT INTO project (project_ref, project_name, organization_id, status, jwt_secret)
-VALUES ($1, $2, $3, 'UNKNOWN', $4)
+INSERT INTO project (project_ref, project_name, organization_id, status, jwt_secret, cloud_provider, region)
+VALUES ($1, $2, $3, 'UNKNOWN', $4, $5, $6)
 RETURNING id, project_ref, project_name, organization_id, status, cloud_provider, region, jwt_secret, created_at, updated_at
 `
 
@@ -20,6 +20,8 @@ type CreateProjectParams struct {
 	ProjectName    string
 	OrganizationID int32
 	JwtSecret      string
+	CloudProvider  string
+	Region         string
 }
 
 func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) (Project, error) {
@@ -28,6 +30,8 @@ func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) (P
 		arg.ProjectName,
 		arg.OrganizationID,
 		arg.JwtSecret,
+		arg.CloudProvider,
+		arg.Region,
 	)
 	var i Project
 	err := row.Scan(
