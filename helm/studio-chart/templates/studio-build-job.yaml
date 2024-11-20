@@ -1,0 +1,63 @@
+{{- if .Values.studio.image.build.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: studio-build-{{ .Release.Revision }}
+  namespace: {{ .Values.global.namespace }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    spec:
+      containers:
+      - name: builder
+        image: docker:20.10-dind
+        securityContext:
+          privileged: true
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+          mkdir -p /workspace
+          cd /workspace
+          
+          # Configure insecure registry if using in-cluster registry
+          {{- if .Values.global.registry.deploy }}
+          echo '{"insecure-registries": ["registry:5000"]}' > /etc/docker/daemon.json
+          {{- end }}
+          
+          # Copy build context from configmap
+          cp -r /build-context/* .
+          
+          # Create .env file
+          cat > .env << EOL
+          PLATFORM_PG_META_URL=http://api.{{ .Values.global.domain }}/pg
+          NEXT_PUBLIC_SITE_URL=https://studio.{{ .Values.global.domain }}
+          NEXT_PUBLIC_SUPABASE_URL=http://api.{{ .Values.global.domain }}
+          NEXT_PUBLIC_GOTRUE_URL=http://api.{{ .Values.global.domain }}/auth
+          NEXT_PUBLIC_API_URL=http://api.{{ .Values.global.domain }}
+          NEXT_PUBLIC_API_ADMIN_URL=http://api.{{ .Values.global.domain }}
+          NEXT_PUBLIC_HCAPTCHA_SITE_KEY=10000000-ffff-ffff-ffff-000000000001
+          EOL
+          
+          # Run build script with correct parameters
+          chmod +x build.sh
+          ./build.sh "v1.24.04" "{{ if .Values.global.registry.deploy }}registry:5000{{ else }}{{ .Values.global.imageRegistry }}{{ end }}/{{ .Values.studio.image.repository }}:{{ .Release.Revision }}" .env
+        volumeMounts:
+        - name: build-context
+          mountPath: /build-context
+        - name: docker-socket
+          mountPath: /var/run/docker.sock
+      volumes:
+      - name: build-context
+        configMap:
+          name: studio-build-context
+      - name: docker-socket
+        hostPath:
+          path: /var/run/docker.sock
+      restartPolicy: Never
+  backoffLimit: 1
+{{- end }} 

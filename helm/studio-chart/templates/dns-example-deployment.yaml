@@ -1,0 +1,23 @@
+{{- if .Values.dnsExample.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dns-example
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dns-example
+  template:
+    metadata:
+      labels:
+        app: dns-example
+    spec:
+      containers:
+      - name: dns-example
+        image: "{{ .Values.global.imageRegistry }}/{{ .Values.dnsExample.image.repository }}:{{ .Values.dnsExample.image.tag }}"
+        imagePullPolicy: {{ .Values.dnsExample.image.pullPolicy }}
+        resources:
+          {{- toYaml .Values.dnsExample.resources | nindent 12 }}
+{{- end }} 

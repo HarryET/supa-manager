@@ -1,0 +1,12 @@
+{{- if .Values.studio.image.build.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: studio-build-context
+  namespace: {{ .Values.global.namespace }}
+data:
+  "build.sh": |
+{{ .Files.Get "studio/build.sh" | indent 4 }}
+  "patch.sh": |
+{{ .Files.Get "studio/patch.sh" | indent 4 }}
+{{- end }} 

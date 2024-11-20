@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: studio
+  namespace: {{ .Values.global.namespace }}
+spec:
+  selector:
+    app: studio
+  ports:
+    - protocol: TCP
+      port: {{ .Values.studio.service.port }}
+      targetPort: 3000 

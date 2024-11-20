@@ -1,0 +1,6 @@
+apiVersion: v2
+name: studio-chart
+description: Helm chart for Studio and related services
+type: application
+version: 0.1.0
+appVersion: "1.0.0" 

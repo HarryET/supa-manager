@@ -1,0 +1,16 @@
+{{- if and .Values.global.registry.deploy .Values.global.registry.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: registry-pvc
+  namespace: {{ .Values.global.namespace }}
+spec:
+  {{- if .Values.global.registry.persistence.storageClass }}
+  storageClassName: {{ .Values.global.registry.persistence.storageClass }}
+  {{- end }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.global.registry.persistence.size }}
+{{- end }} 

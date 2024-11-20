@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: supa-manager
+  namespace: {{ .Values.global.namespace }}
+spec:
+  selector:
+    app: supa-manager
+  ports:
+    - protocol: TCP
+      port: {{ .Values.supaManager.service.port }}
+      targetPort: 8080 

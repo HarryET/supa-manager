@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: studio
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: studio
+  template:
+    metadata:
+      labels:
+        app: studio
+    spec:
+      {{- if .Values.studio.image.build.enabled }}
+      initContainers:
+      - name: wait-for-build
+        image: bitnami/kubectl:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Waiting for build job to complete..."
+          while ! kubectl get job studio-build-{{ .Release.Revision }} -n {{ .Values.global.namespace }} -o jsonpath='{.status.succeeded}' 2>/dev/null | grep -q "1"; do
+            sleep 5
+          done
+          echo "Build job completed successfully"
+      {{- end }}
+      containers:
+      - name: studio
+        image: "{{ if .Values.global.registry.deploy }}registry:5000{{ else }}{{ .Values.global.imageRegistry }}{{ end }}/{{ .Values.studio.image.repository }}:{{ if .Values.studio.image.build.enabled }}{{ .Release.Revision }}{{ else }}{{ .Values.studio.image.tag }}{{ end }}"
+        imagePullPolicy: {{ .Values.studio.image.pullPolicy }}
+        resources:
+          {{- toYaml .Values.studio.resources | nindent 12 }} 

@@ -1,0 +1,119 @@
+# Global settings
+global:
+  namespace: studio
+  imageRegistry: ""
+  domain: "example.com"  # Base domain for services
+  registry:
+    deploy: false  # Will be set to true automatically if imageRegistry is empty and build is enabled
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: ""  # Empty string means use cluster default
+
+# Studio settings
+studio:
+  image:
+    repository: studio
+    tag: latest
+    pullPolicy: IfNotPresent
+    build:
+      enabled: true
+      params: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  service:
+    port: 3000
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    host: "studio.{{ .Values.global.domain }}"
+    tls:
+      enabled: true
+
+# DNS Example Service settings
+dnsExample:
+  enabled: true
+  image:
+    repository: dns-example
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# Version Service settings
+versionService:
+  enabled: false
+  image:
+    repository: version-service
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# Supa Manager settings
+supaManager:
+  image:
+    repository: supa-manager
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  service:
+    port: 8080
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    host: "api.{{ .Values.global.domain }}"
+    tls:
+      enabled: true
+
+# PostgreSQL settings
+postgresql:
+  enabled: true
+  auth:
+    username: postgres
+    password: postgres
+    database: studio
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: ""
+  primary:
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: ""
+
+# External PostgreSQL configuration (used when postgresql.enabled is false)
+externalDatabase:
+  url: ""  # Full DATABASE_URL for external PostgreSQL
+  host: ""  # Optional: Individual connection parameters
+  port: "5432"
+  database: ""
+  user: ""
+  password: ""
+  

@@ -1,0 +1,23 @@
+{{- if .Values.versionService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: version-service
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: version-service
+  template:
+    metadata:
+      labels:
+        app: version-service
+    spec:
+      containers:
+      - name: version-service
+        image: "{{ .Values.global.imageRegistry }}/{{ .Values.versionService.image.repository }}:{{ .Values.versionService.image.tag }}"
+        imagePullPolicy: {{ .Values.versionService.image.pullPolicy }}
+        resources:
+          {{- toYaml .Values.versionService.resources | nindent 12 }}
+{{- end }} 

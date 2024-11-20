@@ -1,0 +1,29 @@
+{{- if .Values.supaManager.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: supa-manager
+  namespace: {{ .Values.global.namespace }}
+  {{- with .Values.supaManager.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.supaManager.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.supaManager.ingress.host }}
+      secretName: supa-manager-tls
+  {{- end }}
+  rules:
+    - host: {{ .Values.supaManager.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: supa-manager
+                port:
+                  number: {{ .Values.supaManager.service.port }}
+{{- end }} 

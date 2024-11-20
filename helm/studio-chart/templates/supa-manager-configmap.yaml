@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: supa-manager-config
+  namespace: {{ .Values.global.namespace }}
+data:
+  {{- if .Values.postgresql.enabled }}
+  DATABASE_URL: "postgresql://{{ .Values.postgresql.auth.username }}:{{ .Values.postgresql.auth.password }}@{{ .Release.Name }}-postgresql:5432/{{ .Values.postgresql.auth.database }}?sslmode=disable"
+  POSTGRES_HOST: {{ .Release.Name }}-postgresql
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: {{ .Values.postgresql.auth.database }}
+  POSTGRES_USER: {{ .Values.postgresql.auth.username }}
+  POSTGRES_PASSWORD: {{ .Values.postgresql.auth.password }}
+  {{- else }}
+  DATABASE_URL: {{ required "A valid database URL is required when postgresql.enabled is false" .Values.externalDatabase.url | quote }}
+  POSTGRES_HOST: {{ default (.Values.externalDatabase.host) (regexReplaceAll "^.*@([^:]+):?[0-9]*/.+$" .Values.externalDatabase.url "${1}") }}
+  POSTGRES_PORT: {{ default (.Values.externalDatabase.port) (regexReplaceAll "^.*@[^:]+:([0-9]+)/.+$" .Values.externalDatabase.url "${1}") }}
+  POSTGRES_DB: {{ default (.Values.externalDatabase.database) (regexReplaceAll "^.*@[^:]+:?[0-9]*/(.+)(?:\\?.+)?$" .Values.externalDatabase.url "${1}") }}
+  POSTGRES_USER: {{ default (.Values.externalDatabase.user) (regexReplaceAll "^.*://([^:]+):.*@.+$" .Values.externalDatabase.url "${1}") }}
+  POSTGRES_PASSWORD: {{ default (.Values.externalDatabase.password) (regexReplaceAll "^.*://[^:]+:([^@]+)@.+$" .Values.externalDatabase.url "${1}") }}
+  {{- end }} 
